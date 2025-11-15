@@ -218,7 +218,7 @@ function formatTime(seconds) {
 
 function updateTimerUI() {
   if (timerEl) {
-    timerEl.textContent = ⏱️ ${formatTime(timeLeft)}`;
+    timerEl.textContent = `⏱️ ${formatTime(timeLeft)}`;
   }
 }
 
