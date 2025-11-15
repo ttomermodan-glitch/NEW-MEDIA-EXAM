@@ -3,7 +3,8 @@
 // ==========================
 const QUESTIONS_PER_ROUND = 3;
 const QUESTION_TIME_SECONDS = 300; // 5 דקות לכל שאלה
-const AVAILABLE_ZONES = [1, 3, 4, 5];
+
+const DEFAULT_ZONES = [1, 3, 4, 5]; // ברירת מחדל למשחק
 
 const POINTS_CORRECT = 5;
 const POINTS_PARTIAL = 3;
@@ -81,6 +82,11 @@ const popupConceptNameEl = document.getElementById("popup-concept-name");
 const popupDefinitionEl = document.getElementById("popup-definition");
 const popupOkBtn = document.getElementById("btn-popup-ok");
 
+// פופאפ הצלחה
+const winOverlayEl = document.getElementById("win-overlay");
+const winContinueBtn = document.getElementById("btn-win-continue");
+const winResetBtn = document.getElementById("btn-win-reset");
+
 // תוצאות משחק
 const resultBannerEl = document.getElementById("game-result");
 
@@ -98,6 +104,11 @@ const studyConceptNameEl = document.getElementById("study-concept-name");
 const studyConceptDefinitionEl = document.getElementById("study-definition");
 const studyNextBtn = document.getElementById("btn-study-next");
 const studyRandomBtn = document.getElementById("btn-study-random");
+
+// סינון זירות במשחק
+const zoneFilterCheckboxes = document.querySelectorAll(".zone-filter");
+const zonesAllBtn = document.getElementById("btn-zones-all");
+const zonesClearBtn = document.getElementById("btn-zones-clear");
 
 // פנימי לפופאפ – אם אחרי "הבנתי" עוברים לשאלה הבאה
 let pendingNextQuestion = false;
@@ -274,6 +285,24 @@ function disableAnswerButtons() {
 }
 
 // ==========================
+// בחירת זירות – מהפאנל
+// ==========================
+function getActiveZones() {
+  const zones = [];
+  if (zoneFilterCheckboxes && zoneFilterCheckboxes.length) {
+    zoneFilterCheckboxes.forEach(cb => {
+      if (cb.checked) {
+        const z = parseInt(cb.value, 10);
+        if (!isNaN(z)) zones.push(z);
+      }
+    });
+  }
+  // אם לא סומנה אף זירה – חוזרים לברירת המחדל (1,3,4,5)
+  if (zones.length === 0) return DEFAULT_ZONES.slice();
+  return zones;
+}
+
+// ==========================
 // משחק – התחלה, סיבוב, שאלות
 // ==========================
 function startGame() {
@@ -336,8 +365,9 @@ function spinWheel() {
 }
 
 function pickRandomZone() {
-  const idx = Math.floor(Math.random() * AVAILABLE_ZONES.length);
-  return AVAILABLE_ZONES[idx];
+  const zones = getActiveZones();
+  const idx = Math.floor(Math.random() * zones.length);
+  return zones[idx];
 }
 
 function startRound(zone) {
@@ -437,6 +467,7 @@ function applyScore(delta) {
 function checkEndConditions() {
   if (score >= TARGET_SCORE) {
     showResultBanner(`הגעת ל-${TARGET_SCORE} נקודות! 🏆`, "win");
+    showWinPopup();
   }
   if (score <= FAIL_SCORE) {
     showResultBanner("הגעת ל-25- נקודות. נכשלת במשחק הזה ❌", "lose");
@@ -457,6 +488,21 @@ function resetScore() {
   saveMasteredToStorage();
   updateScoreUI();
   showResultBanner("הניקוד אופס. אפשר להתחיל מחדש 👌");
+}
+
+// ==========================
+// פופאפ הצלחה – המשך / איפוס
+// ==========================
+function showWinPopup() {
+  if (winOverlayEl) {
+    winOverlayEl.style.display = "flex";
+  }
+}
+
+function hideWinPopup() {
+  if (winOverlayEl) {
+    winOverlayEl.style.display = "none";
+  }
 }
 
 // ==========================
@@ -724,5 +770,32 @@ function setupEventListeners() {
   }
   if (studyRandomBtn) {
     studyRandomBtn.addEventListener("click", studyRandom);
+  }
+
+  // פאנל זירות – כפתורי "כל הזירות" / "אפס בחירה"
+  if (zonesAllBtn && zoneFilterCheckboxes.length) {
+    zonesAllBtn.addEventListener("click", () => {
+      zoneFilterCheckboxes.forEach(cb => cb.checked = true);
+    });
+  }
+
+  if (zonesClearBtn && zoneFilterCheckboxes.length) {
+    zonesClearBtn.addEventListener("click", () => {
+      zoneFilterCheckboxes.forEach(cb => cb.checked = false);
+    });
+  }
+
+  // פופאפ הצלחה
+  if (winContinueBtn) {
+    winContinueBtn.addEventListener("click", () => {
+      hideWinPopup(); // ממשיך לשחק עם אותו ניקוד
+    });
+  }
+
+  if (winResetBtn) {
+    winResetBtn.addEventListener("click", () => {
+      hideWinPopup();
+      resetScore();   // מאפס ניקוד + מושגים "נלמדים"
+    });
   }
 }
