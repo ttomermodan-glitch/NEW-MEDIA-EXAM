@@ -11,7 +11,9 @@ const POINTS_PARTIAL = 3;
 const POINTS_WRONG = -10;
 const POINTS_TIMEOUT = -20;
 
-const TARGET_SCORE = 50;
+// היעד עכשיו דינמי – נחשב לפי הזירות המסומנות
+let TARGET_SCORE = 50;
+
 const FAIL_SCORE = -25;
 
 const STORAGE_SCORE_KEY = "nmScore";
@@ -44,7 +46,7 @@ let wrongConceptNames = new Set();
 let masteredConceptCodes = new Set();
 
 // ==========================
-// DOM Elements (מותאם ל-index.html שלך)
+// DOM Elements
 // ==========================
 const homeScreen = document.getElementById("home-screen");
 const gameScreen = document.getElementById("game-screen");
@@ -69,6 +71,7 @@ const questionCodeEl = document.getElementById("question-code");
 // טיימר וניקוד
 const timerEl = document.getElementById("timer");
 const scoreEl = document.getElementById("score");
+const targetScoreLabelEl = document.getElementById("target-score-label");
 
 // כפתורי ניקוד
 const correctBtn = document.getElementById("btn-correct");
@@ -122,6 +125,9 @@ document.addEventListener("DOMContentLoaded", () => {
   loadMasteredFromStorage();
   initStudyList();
 
+  // מחשב יעד נקודות לפי הזירות המסומנות
+  updateTargetScore();
+
   updateScoreUI();
   resetTimer();
   disableAnswerButtons();
@@ -144,7 +150,7 @@ function showScreen(screen) {
 }
 
 // ==========================
-// טעינה / שמירה של ניקוד ומושגים שגויים / נלמדים
+// טעינה / שמירה
 // ==========================
 function loadScoreFromStorage() {
   const saved = localStorage.getItem(STORAGE_SCORE_KEY);
@@ -226,8 +232,43 @@ function showResultBanner(text, type = "") {
   }
 }
 
+// חישוב יעד נקודות לפי הזירות המסומנות
+function computeTargetScoreForZones(zones) {
+  if (!zones || !zones.length || typeof conceptsByZone === "undefined") {
+    return 50; // fallback
+  }
+
+  let totalConcepts = 0;
+  zones.forEach(z => {
+    const list = conceptsByZone[z];
+    if (Array.isArray(list)) {
+      totalConcepts += list.length;
+    }
+  });
+
+  if (totalConcepts === 0) return 50;
+
+  // כמות מושגים * 80%
+  let base = totalConcepts * 0.8;
+
+  // מעוגל לכפולות של 10 (לפי הקרוב)
+  let roundedTo10 = Math.round(base / 10) * 10;
+
+  // כפול 2
+  return roundedTo10 * 2;
+}
+
+function updateTargetScore() {
+  const zones = getActiveZones();
+  TARGET_SCORE = computeTargetScoreForZones(zones);
+
+  if (targetScoreLabelEl) {
+    targetScoreLabelEl.textContent = `מטרה: ${TARGET_SCORE} נקודות`;
+  }
+}
+
 // ==========================
-// טיימר – לכל שאלה
+// טיימר
 // ==========================
 function resetTimer() {
   clearInterval(timerInterval);
@@ -268,7 +309,7 @@ function onTimeOver() {
 }
 
 // ==========================
-// כפתורי תשובה – הפעלה/כיבוי
+// כפתורי תשובה
 // ==========================
 function enableAnswerButtons() {
   if (correctBtn) correctBtn.disabled = false;
@@ -465,10 +506,22 @@ function applyScore(delta) {
 }
 
 function checkEndConditions() {
+  // עבר את היעד
   if (score >= TARGET_SCORE) {
     showResultBanner(`הגעת ל-${TARGET_SCORE} נקודות! 🏆`, "win");
+
+    // עוצרים את המשחק עד בחירה בפופאפ
+    gameActive = false;
+    roundActive = false;
+    clearInterval(timerInterval);
+    disableAnswerButtons();
+    updateSpinButtonState();
+
     showWinPopup();
+    return;
   }
+
+  // נכשל (מתחת ל-25-)
   if (score <= FAIL_SCORE) {
     showResultBanner("הגעת ל-25- נקודות. נכשלת במשחק הזה ❌", "lose");
     gameActive = false;
@@ -772,30 +825,49 @@ function setupEventListeners() {
     studyRandomBtn.addEventListener("click", studyRandom);
   }
 
-  // פאנל זירות – כפתורי "כל הזירות" / "אפס בחירה"
+  // פאנל זירות – כפתורי "כל הזירות" / "אפס בחירה" + שינוי יעד
   if (zonesAllBtn && zoneFilterCheckboxes.length) {
     zonesAllBtn.addEventListener("click", () => {
       zoneFilterCheckboxes.forEach(cb => cb.checked = true);
+      updateTargetScore();
     });
   }
 
   if (zonesClearBtn && zoneFilterCheckboxes.length) {
     zonesClearBtn.addEventListener("click", () => {
       zoneFilterCheckboxes.forEach(cb => cb.checked = false);
+      updateTargetScore();
+    });
+  }
+
+  if (zoneFilterCheckboxes && zoneFilterCheckboxes.length) {
+    zoneFilterCheckboxes.forEach(cb => {
+      cb.addEventListener("change", () => {
+        updateTargetScore();
+      });
     });
   }
 
   // פופאפ הצלחה
   if (winContinueBtn) {
     winContinueBtn.addEventListener("click", () => {
-      hideWinPopup(); // ממשיך לשחק עם אותו ניקוד
+      hideWinPopup();
+      // ממשיך לשחק עם אותו ניקוד
+      gameActive = true;
+      roundActive = false;
+      updateSpinButtonState();
     });
   }
 
   if (winResetBtn) {
     winResetBtn.addEventListener("click", () => {
       hideWinPopup();
-      resetScore();   // מאפס ניקוד + מושגים "נלמדים"
+      resetScore();
+      // אחרי איפוס – מאפשר שוב לשחק
+      gameActive = true;
+      roundActive = false;
+      updateTargetScore();
+      updateSpinButtonState();
     });
   }
 }
