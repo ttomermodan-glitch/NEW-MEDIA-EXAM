@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ניו מדיה – גלגל מושגים</title>
+
   <style>
     * {
       box-sizing: border-box;
@@ -240,6 +241,36 @@
       max-width: 260px;
     }
 
+    /* סינון זירות במשחק */
+    #zone-filter-bar {
+      margin-bottom: 10px;
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    #zone-filter-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      align-items: center;
+      font-size: 13px;
+      color: #c8d5e4;
+    }
+
+    #zone-filter-options label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    #zone-filter-options input[type="checkbox"] {
+      accent-color: #00c2ff;
+      cursor: pointer;
+    }
+
     #question-box {
       margin-top: 6px;
       background: radial-gradient(circle at top left, rgba(0, 194, 255, 0.18), transparent 55%);
@@ -335,39 +366,13 @@
       font-size: 13px;
     }
 
-    .study-filters .filter-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .study-filters label {
-      white-space: nowrap;
-      color: #b0c1d4;
+    .note {
+      margin-top: 6px;
       font-size: 13px;
+      color: #9aa6bd;
     }
 
-    .study-filters select,
-    .study-filters input {
-      width: 100%;
-      padding: 5px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      background: rgba(3, 10, 26, 0.9);
-      color: #e4efff;
-      font-size: 13px;
-      outline: none;
-    }
-
-    .study-filters select:focus,
-    .study-filters input:focus {
-      border-color: #00c2ff;
-    }
-
-    #study-filters-actions {
-      text-align: left;
-    }
-
+    /* פופאפ הסבר */
     #popup-overlay {
       position: fixed;
       inset: 0;
@@ -407,226 +412,83 @@
       white-space: pre-wrap;
     }
 
-    #popup-info {
-      font-size: 12px;
-      color: #ff8b8b;
-      margin-bottom: 10px;
+    /* פופאפ הצלחה */
+    #win-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1200;
     }
 
-    .popup-buttons {
-      text-align: left;
+    #win-popup {
+      background: #0b1020;
+      border-radius: 20px;
+      padding: 22px 24px;
+      max-width: 420px;
+      width: 90%;
+      border: 1px solid rgba(0, 255, 133, 0.6);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.85);
+      text-align: center;
     }
 
-    #game-result {
-      margin-top: 12px;
-      font-size: 15px;
-      color: #f1f1f1;
-    }
-
-    #game-result.win {
+    #win-popup h3 {
+      margin: 0 0 8px;
       color: #00ff85;
+      font-size: 22px;
     }
 
-    #game-result.lose {
-      color: #ff7b7b;
+    #win-popup p {
+      margin: 0 0 16px;
+      font-size: 15px;
+      color: #d0e6ff;
+      line-height: 1.6;
     }
 
-    /* התאמות למסכים קטנים – מובייל */
+
+    /* מובייל */
     @media (max-width: 600px) {
-      body {
-        padding: 8px;
-      }
-
-      .app {
-        padding: 16px 12px 18px;
-        border-radius: 18px;
-      }
-
-      h1 {
-        font-size: 22px;
-      }
-
-      .subtitle {
-        font-size: 13px;
-        margin-bottom: 12px;
-      }
-
-      .home-buttons {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .home-buttons .btn {
-        width: 100%;
-        text-align: center;
-      }
-
-      #game-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      #timer,
-      #score {
-        font-size: 18px;
-      }
-
       #wheel-container {
         width: 150px;
         height: 150px;
       }
-
-      #question-box {
-        padding: 14px 12px;
-        border-radius: 16px;
-      }
-
-      #concept-name {
-        font-size: 22px;
-      }
-
-      .score-controls,
-      .nav-controls {
-        flex-direction: column;
-      }
-
-      .score-controls .btn,
-      .nav-controls .btn {
-        width: 100%;
-        text-align: center;
-      }
-
-      .study-filters {
-        grid-template-columns: 1fr;
-        padding: 10px 10px;
-      }
-
-      #study-box {
-        padding: 14px 12px;
-        border-radius: 16px;
-      }
-
-      #study-concept-name {
-        font-size: 20px;
-      }
-
-      #study-definition {
-        font-size: 14px;
-      }
-
-      #btn-study-next {
-        width: 100%;
-      }
+      h1 { font-size: 22px; }
+      .btn { width: 100%; text-align: center; }
+      .nav-controls .btn, .score-controls .btn { width: 100%; }
     }
 
-    /* מובייל קטן מאוד */
-    @media (max-width: 400px) {
-      h1 {
-        font-size: 20px;
-      }
-
-      #wheel-container {
-        width: 130px;
-        height: 130px;
-      }
-
-      .btn {
-        font-size: 15px;
-        padding: 9px 18px;
-      }
-
-      .btn.score-btn {
-        font-size: 14px;
-      }
-    }
-
-    /* בחירת תצוגה – שכבה מעל הכל */
-    .layout-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.86);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-    }
-
-    .layout-card {
-      background: #070b16;
-      border-radius: 22px;
-      padding: 22px 20px 18px;
-      max-width: 360px;
-      width: 90%;
-      border: 1px solid rgba(0, 194, 255, 0.6);
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.85);
-      text-align: center;
-    }
-
-    .layout-card h2 {
-      margin-bottom: 8px;
-      font-size: 20px;
-    }
-
-    .layout-card p {
-      margin: 0 0 14px;
-      font-size: 14px;
-      color: #c5d3e5;
-    }
-
-    .layout-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 6px;
-    }
-
-    .layout-buttons .btn {
-      width: 100%;
-      justify-content: center;
-    }
-
-    .layout-small-note {
-      margin-top: 10px;
-      font-size: 12px;
-      color: #8fa0ba;
-    }
-
-    /* פס תחתון להחלפת מצב תצוגה */
-    #layout-toggle-bar {
-      margin-top: 16px;
-      text-align: center;
-    }
   </style>
+
 </head>
 <body>
 
-  <!-- שכבת בחירת תצוגה -->
+  <!-- בחירת מצב תצוגה -->
   <div id="layout-chooser" class="layout-overlay">
     <div class="layout-card">
       <h2>עם איזה תצוגה לעבוד?</h2>
-      <p>אפשר לבחור תצוגת מחשב (רחבה) או תצוגת נייד (צרה ומצומצמת).  
-      הבחירה תישמר לפעם הבאה.</p>
+      <p>בחר אם לעבוד בתצוגת מחשב או נייד. אפשר להחליף אחר כך.</p>
       <div class="layout-buttons">
         <button id="btn-layout-desktop" class="btn">💻 תצוגת מחשב</button>
         <button id="btn-layout-mobile" class="btn secondary">📱 תצוגת נייד</button>
       </div>
-      <div class="layout-small-note">
-        אפשר גם להחליף מצב אחרי זה עם הכפתור בתחתית האתר.
-      </div>
     </div>
   </div>
 
+  <!-- האפליקציה -->
   <div class="app">
+
     <!-- מסך בית -->
     <div id="home-screen">
       <h1>משחק מושגים – ניו מדיה</h1>
-      <div class="subtitle">
-        גלגל זירות • בכל סיבוב 3 מושגים • מטרה: להגיע ל-50 נקודות בכמה סיבובים שצריך
-      </div>
+      <div class="subtitle">גלגל מושגים • 3 שאלות בכל סיבוב • מטרה: להגיע ל־50 נקודות</div>
+
       <div class="center">
-        <div class="tag">זירות למשחק: 1, 3, 4, 5</div><br/>
-        <div class="tag">מצב לימוד: כל הזירות (כולל זירה 9 של פרסום)</div>
+        <div class="tag">זירות במשחק: 1, 3, 4, 5</div>
+        <div class="tag">מצב לימוד כולל גם זירה 9</div>
       </div>
+
       <div class="home-buttons">
         <button id="btn-start-game" class="btn">🎮 התחל משחק</button>
         <button id="btn-study-mode" class="btn secondary">📚 מצב לימוד</button>
@@ -635,16 +497,30 @@
 
     <!-- מסך משחק -->
     <div id="game-screen" class="hidden">
+
       <div id="game-header">
-        <div>
-          <div id="timer">⏱️ 05:00</div>
-        </div>
+        <div><div id="timer">⏱️ 05:00</div></div>
         <div>
           <div id="score">⭐ ניקוד: 0</div>
-          <div class="tag">מטרה: 50 נקודות (נכשל: מתחת ל-25-)</div>
+          <div class="tag">מטרה: 50 נקודות</div>
         </div>
       </div>
 
+      <!-- סינון זירות -->
+      <div id="zone-filter-bar">
+        <div class="section-title">זירות למשחק:</div>
+        <div id="zone-filter-options">
+          <label><input type="checkbox" class="zone-filter" value="1" checked> זירה 1</label>
+          <label><input type="checkbox" class="zone-filter" value="3" checked> זירה 3</label>
+          <label><input type="checkbox" class="zone-filter" value="4" checked> זירה 4</label>
+          <label><input type="checkbox" class="zone-filter" value="5" checked> זירה 5</label>
+          <label><input type="checkbox" class="zone-filter" value="9"> זירה 9 – פרסום</label>
+          <button id="btn-zones-all" class="btn secondary small-btn">כל הזירות</button>
+          <button id="btn-zones-clear" class="btn secondary small-btn">אפס בחירה</button>
+        </div>
+      </div>
+
+      <!-- הגלגל -->
       <div id="wheel-section">
         <div id="wheel-container">
           <div id="pointer"></div>
@@ -657,11 +533,9 @@
             </div>
           </div>
         </div>
+
         <div>
           <button id="btn-spin" class="btn">🎯 סובב גלגל</button>
-          <div id="wheel-message">
-            סובב את הגלגל כדי לבחור זירה. אחרי העצירה יופיעו 3 מושגים מהזירה הזו והטיימר יתחיל לבד.
-          </div>
         </div>
       </div>
 
@@ -670,47 +544,48 @@
         <div id="question-code"></div>
         <div id="zone-label">זירה: -</div>
         <div id="concept-name">המתן לבחירת הזירה</div>
+
         <div class="note">
-          את התשובה אתה כותב **בצ׳אט** (איתי 😉).  
-          תכתוב גם את <b>קוד השאלה</b> שמופיע כאן באתר.
+          את התשובה כותבים בצ'אט עם תומר 😉  
+          אל תשכח לרשום את <b>קוד השאלה</b>.
         </div>
       </div>
 
-      <div class="section-title">ניקוד לשאלה הזאת:</div>
+      <div class="section-title">ניקוד:</div>
       <div class="score-controls">
         <button id="btn-correct" class="btn score-btn" disabled>✅ נכון (+5)</button>
-        <button id="btn-partial" class="btn secondary score-btn" disabled>⚖️ תשובה חלקית (+3)</button>
-        <button id="btn-wrong" class="btn danger score-btn" disabled>❌ טעות (-10 + הסבר)</button>
-        <button id="btn-timeover" class="btn danger score-btn" disabled>⏰ נגמר הזמן לשאלה (-20 + הסבר)</button>
+        <button id="btn-partial" class="btn secondary score-btn" disabled>⚖️ חלקי (+3)</button>
+        <button id="btn-wrong" class="btn danger score-btn" disabled>❌ טעות (-10)</button>
+        <button id="btn-timeover" class="btn danger score-btn" disabled>⏰ נגמר הזמן (-20)</button>
       </div>
 
-      <div class="section-title">ניווט:</div>
       <div class="nav-controls">
         <button id="btn-reset-score" class="btn secondary">🔄 איפוס ניקוד</button>
-        <button id="btn-back-home-from-game" class="btn secondary">🏠 חזרה למסך הבית</button>
+        <button id="btn-back-home-from-game" class="btn secondary">🏠 בית</button>
       </div>
 
       <div id="game-result"></div>
+
     </div>
 
     <!-- מסך מצב לימוד -->
     <div id="study-screen" class="hidden">
+
       <h2>מצב לימוד – כל המושגים</h2>
-      <div class="subtitle">
-        רואה מושג + הגדרה מלאה • לוחץ "הבנתי" למושג הבא  
-        אפשר לסנן לפי זירה / רק מושגים שטעית בהם / חיפוש לפי שם מושג.
-      </div>
+      <div class="subtitle">לימוד לפי זירה / טעויות / חיפוש • כולל קוד שאלה</div>
 
       <div class="study-filters">
+
         <div class="filter-row">
-          <label for="study-source-filter">מקור:</label>
+          <label>מקור: </label>
           <select id="study-source-filter">
             <option value="all">כל המושגים</option>
-            <option value="mistakes">מושגים שטעיתי בהם</option>
+            <option value="mistakes">רק מושגים שטעיתי בהם</option>
           </select>
         </div>
+
         <div class="filter-row">
-          <label for="study-zone-filter">זירה:</label>
+          <label>זירה:</label>
           <select id="study-zone-filter">
             <option value="all">כל הזירות</option>
             <option value="1">זירה 1</option>
@@ -720,13 +595,16 @@
             <option value="9">זירה 9 – פרסום</option>
           </select>
         </div>
+
         <div class="filter-row">
-          <label for="study-search">חיפוש:</label>
-          <input id="study-search" type="text" placeholder="הקלד שם מושג..." />
+          <label>חיפוש:</label>
+          <input id="study-search" placeholder="שם מושג..." />
         </div>
+
         <div id="study-filters-actions">
-          <button id="btn-apply-study-filter" class="btn secondary small-btn">החל סינון</button>
+          <button id="btn-apply-study-filter" class="btn secondary small-btn">החל</button>
         </div>
+
       </div>
 
       <div id="study-box">
@@ -735,35 +613,52 @@
         <div id="study-definition">—</div>
       </div>
 
-<div class="nav-controls">
-  <button id="btn-study-next" class="btn">✅ הבנתי, הבא</button>
-  <button id="btn-study-random" class="btn secondary">🎲 מושג אקראי</button>
-  <button id="btn-back-home-from-study" class="btn secondary">🏠 חזרה למסך הבית</button>
-</div>
+      <div class="nav-controls">
+        <button id="btn-study-next" class="btn">✅ הבנתי – הבא</button>
+        <button id="btn-study-random" class="btn secondary">🎲 אקראי</button>
+        <button id="btn-back-home-from-study" class="btn secondary">🏠 בית</button>
+      </div>
 
-    <!-- פס תחתון: החלפת מצב תצוגה -->
-    <div id="layout-toggle-bar">
-      <button id="btn-toggle-layout" class="btn secondary small-btn">🖥️/📱 החלף מצב תצוגה</button>
     </div>
-  </div>
 
-  <!-- פופאפ הסבר מושג -->
-  <div id="popup-overlay">
-    <div id="popup">
-      <h3>הסבר על המושג</h3>
-      <div id="popup-concept-name"></div>
-      <div id="popup-definition"></div>
-      <div id="popup-info">הנה ההגדרה המלאה של המושג לשאלה הזאת.</div>
-      <div class="popup-buttons">
-        <button id="btn-popup-ok" class="btn">הבנתי</button>
+    <!-- פופאפ הסבר -->
+    <div id="popup-overlay">
+      <div id="popup">
+        <h3>הסבר על המושג</h3>
+        <div id="popup-concept-name"></div>
+        <div id="popup-definition"></div>
+        <div class="popup-buttons">
+          <button id="btn-popup-ok" class="btn">הבנתי</button>
+        </div>
       </div>
     </div>
+
+    <!-- פופאפ הצלחה -->
+    <div id="win-overlay">
+      <div id="win-popup">
+        <h3>הצלחת! 🎉</h3>
+        <p>
+          הגעת ל־50 נקודות!  
+          תרצה להמשיך לשחק או לאפס ניקוד ולהתחיל מחדש?
+        </p>
+        <div class="popup-buttons">
+          <button id="btn-win-continue" class="btn secondary">להמשיך</button>
+          <button id="btn-win-reset" class="btn">איפוס ניקוד</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- כפתור החלפת תצוגה -->
+    <div id="layout-toggle-bar">
+      <button id="btn-toggle-layout" class="btn secondary small-btn">🖥️ / 📱 החלף תצוגה</button>
+    </div>
+
   </div>
 
   <script src="data.js"></script>
   <script src="game.js"></script>
 
-  <!-- סקריפט קטן לבחירת/החלפת תצוגה -->
+  <!-- בחירת תצוגה -->
   <script>
     window.addEventListener("DOMContentLoaded", function () {
       const overlay = document.getElementById("layout-chooser");
@@ -772,53 +667,34 @@
       const btnMobile = document.getElementById("btn-layout-mobile");
       const btnToggle = document.getElementById("btn-toggle-layout");
 
-
       function applyLayout(mode) {
         app.classList.remove("force-desktop", "force-mobile");
-        if (mode === "desktop") {
-          app.classList.add("force-desktop");
-        } else if (mode === "mobile") {
-          app.classList.add("force-mobile");
-        }
-        try {
-          localStorage.setItem("nm_layout_mode", mode);
-        } catch (e) {}
+        if (mode === "desktop") app.classList.add("force-desktop");
+        if (mode === "mobile") app.classList.add("force-mobile");
+        localStorage.setItem("nm_layout_mode", mode);
       }
 
-      function getCurrentMode() {
-        if (app.classList.contains("force-desktop")) return "desktop";
-        if (app.classList.contains("force-mobile")) return "mobile";
-        return null;
-      }
-
-      // אם כבר שמור מצב – טוען אוטומטית
-      let saved = null;
-      try {
-        saved = localStorage.getItem("nm_layout_mode");
-      } catch (e) {}
-
-      if (saved === "desktop" || saved === "mobile") {
+      let saved = localStorage.getItem("nm_layout_mode");
+      if (saved) {
         applyLayout(saved);
         overlay.style.display = "none";
       }
 
-      btnDesktop.addEventListener("click", function () {
+      btnDesktop.onclick = () => {
         applyLayout("desktop");
         overlay.style.display = "none";
-      });
-
-      btnMobile.addEventListener("click", function () {
+      };
+      btnMobile.onclick = () => {
         applyLayout("mobile");
         overlay.style.display = "none";
-      });
+      };
 
-      // כפתור החלפת מצב תצוגה בתחתית
-      btnToggle.addEventListener("click", function () {
-        const current = getCurrentMode() || saved || "desktop";
-        const next = current === "desktop" ? "mobile" : "desktop";
-        applyLayout(next);
-      });
+      btnToggle.onclick = () => {
+        const current = app.classList.contains("force-desktop") ? "desktop" : "mobile";
+        applyLayout(current === "desktop" ? "mobile" : "desktop");
+      };
     });
   </script>
+
 </body>
 </html>
