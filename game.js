@@ -117,16 +117,15 @@ const zonesClearBtn = document.getElementById("btn-zones-clear");
 let pendingNextQuestion = false;
 
 // ==========================
-// Init
+// Init – ברגע שהדף מוכן
 // ==========================
 document.addEventListener("DOMContentLoaded", () => {
   loadScoreFromStorage();
   loadWrongConceptsFromStorage();
   loadMasteredFromStorage();
-  initStudyList();
 
-  // מחשב יעד נקודות לפי הזירות המסומנות
-  updateTargetScore();
+  initStudyList();      // בונה את רשימת המושגים ללמידה (עם הגנה אם conceptsByZone לא קיים)
+  updateTargetScore();  // יעד ניקוד לפי זירות
 
   updateScoreUI();
   resetTimer();
@@ -204,7 +203,7 @@ function saveMasteredToStorage() {
 }
 
 // ==========================
-// UI Updates
+// UI
 // ==========================
 function updateScoreUI() {
   if (!scoreEl) return;
@@ -219,7 +218,7 @@ function formatTime(seconds) {
 
 function updateTimerUI() {
   if (timerEl) {
-    timerEl.textContent = `⏱️ ${formatTime(timeLeft)}`;
+    timerEl.textContent = ⏱️ ${formatTime(timeLeft)}`;
   }
 }
 
@@ -248,13 +247,9 @@ function computeTargetScoreForZones(zones) {
 
   if (totalConcepts === 0) return 50;
 
-  // כמות מושגים * 80%
+  // 80% מהמושגים, עיגול לכפולות 10, כפול 2
   let base = totalConcepts * 0.8;
-
-  // מעוגל לכפולות של 10 (לפי הקרוב)
   let roundedTo10 = Math.round(base / 10) * 10;
-
-  // כפול 2
   return roundedTo10 * 2;
 }
 
@@ -387,7 +382,7 @@ function spinWheel() {
   roundActive = true;
   updateSpinButtonState();
 
-  // אנימציה בסיסית ל"גלגל"
+  // אנימציה בסיסית לגלגל
   if (wheelEl) {
     const extraTurns = 360 * 5;
     const randomAngle = Math.floor(Math.random() * 360);
@@ -465,6 +460,10 @@ function endRound() {
 // בחירת שאלות מהזירה
 // ==========================
 function getRandomQuestionsFromZone(zone, count) {
+  if (typeof conceptsByZone === "undefined") {
+    return [];
+  }
+
   const list = conceptsByZone && conceptsByZone[zone] ? conceptsByZone[zone] : [];
   if (!list.length) return [];
 
@@ -580,11 +579,19 @@ function handlePartial() {
   disableAnswerButtons();
   clearInterval(timerInterval);
   applyScore(POINTS_PARTIAL);
+
+  // חלקי = נחשב כטעות ללמידה
   markConceptAsWrong(concept);
+
+  // אחריות: לא נסמן את הקוד הזה כמאסטר
+  if (typeof concept.code !== "undefined") {
+    masteredConceptCodes.delete(concept.code);
+    saveMasteredToStorage();
+  }
 
   showDefinitionPopup(
     concept,
-    "תשובה חלקית ⚠️\nקיבלת 3 נקודות, אבל שים לב להגדרה המלאה:"
+    "תשובה חלקית ⚠️\nקיבלת 3 נקודות, שים לב להגדרה המלאה:"
   );
   pendingNextQuestion = true;
 }
@@ -637,7 +644,8 @@ function markConceptAsMastered(concept) {
 function showDefinitionPopup(concept, prefixText = "") {
   if (!popupOverlayEl || !popupConceptNameEl || !popupDefinitionEl) return;
   popupConceptNameEl.textContent = concept.name || "מושג";
-  popupDefinitionEl.textContent = prefixText + "\n\n" + (concept.definition || "");
+  popupDefinitionEl.textContent =
+    (prefixText ? prefixText + "\n\n" : "") + (concept.definition || "");
   popupOverlayEl.style.display = "flex";
 }
 
@@ -655,7 +663,11 @@ function closeDefinitionPopup() {
 // ==========================
 function initStudyList() {
   studyList = [];
-  if (!conceptsByZone) return;
+
+  // הגנה – אם data.js לא נטען או אין conceptsByZone
+  if (typeof conceptsByZone === "undefined" || !conceptsByZone) {
+    return;
+  }
 
   Object.keys(conceptsByZone).forEach(zoneKey => {
     const z = parseInt(zoneKey, 10);
@@ -852,7 +864,6 @@ function setupEventListeners() {
   if (winContinueBtn) {
     winContinueBtn.addEventListener("click", () => {
       hideWinPopup();
-      // ממשיך לשחק עם אותו ניקוד
       gameActive = true;
       roundActive = false;
       updateSpinButtonState();
@@ -863,7 +874,6 @@ function setupEventListeners() {
     winResetBtn.addEventListener("click", () => {
       hideWinPopup();
       resetScore();
-      // אחרי איפוס – מאפשר שוב לשחק
       gameActive = true;
       roundActive = false;
       updateTargetScore();
