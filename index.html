@@ -472,30 +472,6 @@
       max-width: 260px;
     }
 
-    /* איך המשחק עובד */
-    #how-it-works-box,
-    #credits-box {
-      margin-top: 10px;
-      padding: 12px 14px;
-      background: rgba(5, 12, 30, 0.98);
-      border-radius: 16px;
-      border: 1px solid rgba(0, 194, 255, 0.36);
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    #how-it-works-box pre {
-      margin-top: 8px;
-      padding: 10px;
-      border-radius: 12px;
-      background: rgba(0, 0, 0, 0.42);
-      overflow-x: auto;
-      font-size: 11px;
-      white-space: pre-wrap;
-      line-height: 1.5;
-      direction: rtl;
-    }
-
     #credits-box p {
       margin: 4px 0;
     }
@@ -584,7 +560,6 @@
       </div>
 
       <div class="center">
-        <!-- כאן הוספתי את זירה 2 -->
         <div class="tag">זירות במשחק: 1, 2, 3, 4, 5 (אפשר גם 9)</div><br />
         <div class="tag">מצב לימוד כולל גם זירה 9 – פרסום</div>
       </div>
@@ -592,45 +567,7 @@
       <div class="home-buttons">
         <button id="btn-start-game" class="btn">🎮 התחל משחק</button>
         <button id="btn-study-mode" class="btn secondary">📚 מצב לימוד</button>
-        <button id="btn-how-it-works" class="btn secondary">ℹ️ איך המשחק עובד?</button>
         <button id="btn-credits" class="btn secondary">©️ קרדיטים</button>
-      </div>
-
-      <div id="how-it-works-box" class="hidden">
-        <h3>איך המשחק עובד?</h3>
-        <p>
-          1. אתה לוחץ <b>"התחל משחק"</b> → סובב גלגל → נבחרת זירה (1 / 2 / 3 / 4 / 5 / 9).<br>
-          2. מהזירה הזאת מוצגות לך 3 שאלות (מושגים) – לכל שאלה יש <b>קוד</b> קבוע.<br>
-          3. את התשובה אתה כותב כאן בצ׳אט איתי, בפורמט:
-        </p>
-
-        <p><code>קוד – תיאור</code> (לדוגמה: <code>129 – בידור – תוכן שנועד לשעשוע</code>)</p>
-
-        <p>
-          אני משווה את מה שכתבת להגדרה הרשמית של הקוד, ונותן לך אחד משלושת המצבים:
-        </p>
-
-        <ul style="margin-top:4px; margin-bottom:10px; padding-left:18px;">
-          <li>✅ <b>נכון</b> – אני כותב: <b>5 נקודות +</b></li>
-          <li>⚖️ <b>נכון חלקית</b> – אני כותב: <b>3 נקודות +</b> + מסביר מה חסר / לא מדויק</li>
-          <li>❌ <b>טעות</b> – אני כותב: <b>10- נקודות</b> + מסביר מה לא נכון</li>
-        </ul>
-
-        <p>
-          אני <b>לא מנהל את הניקוד בפועל</b> – אתה מנהל את הניקוד במשחק באתר, אבל אני תמיד אכתוב ליד התשובה את
-          סוג הציון (נכון / חלקי / טעות) + כמה נקודות זה שווה.
-        </p>
-
-        <p>להלן הפרומט שאתה שולח ל-ChatGPT שלך:</p>
-
-        <pre id="how-it-works-pre">
-זירה 1 (101–131)
-
-101 – תקשורת – קשר בין אנשים להעברת מידע
-102 – סוגי תקשורת – כתובה/מדוברת/חזותית
-103 – תקשורת כתובה – מסרים בטקסט
-...
-        </pre>
       </div>
 
       <div id="credits-box" class="hidden">
@@ -658,7 +595,6 @@
         <div class="section-title" style="margin-top:0;">זירות למשחק:</div>
         <div>
           <label><input type="checkbox" class="zone-filter" value="1" checked> זירה 1</label>
-          <!-- כאן הוספתי את זירה 2 -->
           <label><input type="checkbox" class="zone-filter" value="2" checked> זירה 2</label>
           <label><input type="checkbox" class="zone-filter" value="3" checked> זירה 3</label>
           <label><input type="checkbox" class="zone-filter" value="4" checked> זירה 4</label>
@@ -740,7 +676,6 @@
           <select id="study-zone-filter">
             <option value="all">כל הזירות</option>
             <option value="1">זירה 1</option>
-            <!-- כאן הוספתי את זירה 2 -->
             <option value="2">זירה 2</option>
             <option value="3">זירה 3</option>
             <option value="4">זירה 4</option>
@@ -804,7 +739,7 @@
 
   <script src="data.js"></script>
 
-  <!-- סקריפט בחירת תצוגה + "איך המשחק עובד" + קרדיטים -->
+  <!-- סקריפט בחירת תצוגה + קרדיטים -->
   <script>
     window.addEventListener("DOMContentLoaded", function () {
       const overlay = document.getElementById("layout-chooser");
@@ -813,8 +748,6 @@
       const btnMobile = document.getElementById("btn-layout-mobile");
       const btnToggle = document.getElementById("btn-toggle-layout");
 
-      const howBtn = document.getElementById("btn-how-it-works");
-      const howBox = document.getElementById("how-it-works-box");
       const creditsBtn = document.getElementById("btn-credits");
       const creditsBox = document.getElementById("credits-box");
 
@@ -846,24 +779,10 @@
         applyLayout(isDesktop ? "mobile" : "desktop");
       });
 
-      function hideAllInfoBoxes() {
-        if (howBox) howBox.classList.add("hidden");
-        if (creditsBox) creditsBox.classList.add("hidden");
-      }
-
-      if (howBtn && howBox) {
-        howBtn.addEventListener("click", () => {
-          const willShow = howBox.classList.contains("hidden");
-          hideAllInfoBoxes();
-          if (willShow) howBox.classList.remove("hidden");
-        });
-      }
-
       if (creditsBtn && creditsBox) {
         creditsBtn.addEventListener("click", () => {
           const willShow = creditsBox.classList.contains("hidden");
-          hideAllInfoBoxes();
-          if (willShow) creditsBox.classList.remove("hidden");
+          creditsBox.classList.toggle("hidden", !willShow);
         });
       }
     });
