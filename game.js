@@ -336,46 +336,6 @@ function handleScoreForCurrentQuestion(type) {
   showCurrentQuestion();
 }
 
-  const q = currentRoundConcepts[currentQuestionIndex];
-  const result = document.getElementById("game-result");
-
-  if (type === "correct") {
-    score += 5;
-    if (result) {
-      result.textContent = "סימנת: נכון (+5 נקודות).";
-      result.classList.remove("lose");
-      result.classList.add("win");
-    }
-  } else if (type === "partial") {
-    score += 3;
-    if (result) {
-      result.textContent = "סימנת: נכון חלקית (+3 נקודות).";
-      result.classList.remove("lose");
-      result.classList.add("win");
-    }
-  } else if (type === "wrong") {
-    score -= 10;
-    if (result) {
-      result.textContent = "סימנת: טעות (-10 נקודות). המושג נשמר ללמידה.";
-      result.classList.remove("win");
-      result.classList.add("lose");
-    }
-    addMistake(q);
-  } else if (type === "timeover") {
-    score -= 20;
-    if (result) {
-      result.textContent = "נגמר הזמן לשאלה (-20 נקודות). המושג נשמר ללמידה.";
-      result.classList.remove("win");
-      result.classList.add("lose");
-    }
-    addMistake(q);
-  }
-
-  updateScoreView();
-  currentQuestionIndex++;
-  showCurrentQuestion();
-}
-
 // הוספת מושג לרשימת טעויות
 function addMistake(q) {
   const exists = mistakesList.some((m) => m.zone === q.zone && m.name === q.name);
@@ -624,3 +584,4 @@ window.addEventListener("DOMContentLoaded", function () {
 
   showScreenHome();
 });
+
