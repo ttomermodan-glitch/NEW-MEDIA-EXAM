@@ -1,459 +1,463 @@
 // game.js
 
-// מפתח לשמירה מקומית
-const GAME_STORAGE_KEY = "nm_game_state_v2";
+window.addEventListener("DOMContentLoaded", () => {
+  // מסכים
+  const homeScreen = document.getElementById("home-screen");
+  const gameScreen = document.getElementById("game-screen");
+  const studyScreen = document.getElementById("study-screen");
 
-// תוויות לזירות לתצוגה
-const ZONE_LABELS = {
-  1: "זירה 1 - יסודות תקשורת",
-  2: "זירה 2 - גלובליזציה",
-  3: "זירה 3 - הצגת המציאות",
-  4: "זירה 4 - הומור וסאטירה",
-  5: "זירה 5 - תרבות דיגיטלית",
-  9: "זירה 9 - פרסום וצרכנות"
-};
+  // כפתורי ניווט ראשיים
+  const btnStartGame = document.getElementById("btn-start-game");
+  const btnStudyMode = document.getElementById("btn-study-mode");
+  const btnBackHomeFromGame = document.getElementById("btn-back-home-from-game");
+  const btnBackHomeFromStudy = document.getElementById("btn-back-home-from-study");
 
-// מצב משחק בזיכרון
-let state = {
-  points: 0,
-  questionsAnswered: 0,
-  mastered: [], // [{zone, code}]
-  answers: {},  // {"zone-code": "טקסט תשובה"}
-  current: null // {zone, code}
-};
+  // גלגל וזירות
+  const btnSpin = document.getElementById("btn-spin");
+  const wheel = document.getElementById("wheel");
+  const wheelMessage = document.getElementById("wheel-message");
+  const zoneCheckboxes = document.querySelectorAll(".zone-filter");
+  const btnZonesAll = document.getElementById("btn-zones-all");
+  const btnZonesClear = document.getElementById("btn-zones-clear");
 
-// עוזר: יצירת מפתח אחיד לקוד
-function conceptKey(zone, code) {
-  return zone + "-" + code;
-}
+  // שאלה וניקוד
+  const timerEl = document.getElementById("timer");
+  const scoreEl = document.getElementById("score");
+  const targetScoreLabel = document.getElementById("target-score-label");
+  const questionNumberEl = document.getElementById("question-number");
+  const questionCodeEl = document.getElementById("question-code");
+  const zoneLabelEl = document.getElementById("zone-label");
+  const conceptNameEl = document.getElementById("concept-name");
+  const resultEl = document.getElementById("game-result");
 
-// טעינת מצב מ-localStorage
-function loadState() {
-  try {
-    const raw = localStorage.getItem(GAME_STORAGE_KEY);
-    if (!raw) return;
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === "object") {
-      state = Object.assign(state, parsed);
+  const btnCorrect = document.getElementById("btn-correct");
+  const btnPartial = document.getElementById("btn-partial");
+  const btnWrong = document.getElementById("btn-wrong");
+  const btnTimeOver = document.getElementById("btn-timeover");
+  const btnResetScore = document.getElementById("btn-reset-score");
+
+  // מצב לימוד
+  const studySourceFilter = document.getElementById("study-source-filter");
+  const studyZoneFilter = document.getElementById("study-zone-filter");
+  const studySearchInput = document.getElementById("study-search");
+  const btnApplyStudyFilter = document.getElementById("btn-apply-study-filter");
+  const studyCounterEl = document.getElementById("study-counter");
+  const studyConceptNameEl = document.getElementById("study-concept-name");
+  const studyDefinitionEl = document.getElementById("study-definition");
+  const btnStudyNext = document.getElementById("btn-study-next");
+  const btnStudyRandom = document.getElementById("btn-study-random");
+
+  // פופאפים
+  const popupOverlay = document.getElementById("popup-overlay");
+  const popupConceptName = document.getElementById("popup-concept-name");
+  const popupDefinition = document.getElementById("popup-definition");
+  const btnPopupOk = document.getElementById("btn-popup-ok");
+
+  const winOverlay = document.getElementById("win-overlay");
+  const btnWinContinue = document.getElementById("btn-win-continue");
+  const btnWinReset = document.getElementById("btn-win-reset");
+
+  // נתונים מה־data.js
+  const conceptsByZone = window.conceptsByZone || {};
+  const ROUND_QUESTIONS = 3;
+  const TIME_LIMIT_SECONDS = 5 * 60;
+  const SCORE_CORRECT = 5;
+  const SCORE_PARTIAL = 3;
+  const SCORE_WRONG = -10;
+  const SCORE_TIMEOVER = -20;
+
+  let currentScore = 0;
+  let targetScore = 50;
+  let timer = null;
+  let remainingSeconds = TIME_LIMIT_SECONDS;
+
+  let currentZone = null;
+  let currentQuestions = [];
+  let currentQuestionIndex = 0;
+  let totalQuestionsAsked = 0;
+
+  const mistakesSet = new Set(); // ids/קודים שטעית בהם
+
+  // פונקציות עזר קטנות
+  function showScreen(screen) {
+    homeScreen.classList.add("hidden");
+    gameScreen.classList.add("hidden");
+    studyScreen.classList.add("hidden");
+    screen.classList.remove("hidden");
+  }
+
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  }
+
+  function updateTimerDisplay() {
+    timerEl.textContent = "⏱️ " + formatTime(remainingSeconds);
+  }
+
+  function startTimer() {
+    stopTimer();
+    remainingSeconds = TIME_LIMIT_SECONDS;
+    updateTimerDisplay();
+    timer = setInterval(() => {
+      remainingSeconds--;
+      if (remainingSeconds <= 0) {
+        remainingSeconds = 0;
+        updateTimerDisplay();
+        stopTimer();
+        handleTimeOver();
+      } else {
+        updateTimerDisplay();
+      }
+    }, 1000);
+  }
+
+  function stopTimer() {
+    if (timer) {
+      clearInterval(timer);
+      timer = null;
     }
-  } catch (e) {
-    console.error("failed to load state", e);
   }
-}
 
-// שמירת מצב ל-localStorage
-function saveState() {
-  try {
-    localStorage.setItem(GAME_STORAGE_KEY, JSON.stringify(state));
-  } catch (e) {
-    console.error("failed to save state", e);
+  function updateScore(delta, reasonText) {
+    currentScore += delta;
+    scoreEl.textContent = "⭐ ניקוד: " + currentScore;
+    if (reasonText) {
+      resultEl.textContent = reasonText;
+      resultEl.className = "";
+      if (delta > 0) resultEl.classList.add("win");
+      if (delta < 0) resultEl.classList.add("lose");
+    }
+    if (currentScore >= targetScore) {
+      winOverlay.style.display = "flex";
+    }
   }
-}
 
-// עוזר: בדיקה אם מושג כבר ב-MASTERED
-function isMastered(zone, code) {
-  return state.mastered.some(function (c) {
-    return c.zone === zone && c.code === code;
+  function enableScoreButtons(enabled) {
+    [btnCorrect, btnPartial, btnWrong, btnTimeOver].forEach(btn => {
+      btn.disabled = !enabled;
+    });
+  }
+
+  function getZoneConcepts(zone) {
+    const list = conceptsByZone[zone] || conceptsByZone[String(zone)] || [];
+    return Array.isArray(list) ? list : [];
+  }
+
+  function normalizeConcept(concept) {
+    if (!concept) return { id: null, code: "", name: "—", definition: "—" };
+    const id = concept.id ?? concept.code ?? concept.key ?? null;
+    const code = concept.code ?? concept.id ?? "";
+    const name = concept.name || concept.term || concept.title || concept.conceptName || ("מושג " + code);
+    const definition = concept.definition || concept.def || concept.text || concept.description || "";
+    return { id, code, name, definition };
+  }
+
+  function pickRandomZone() {
+    const active = Array.from(zoneCheckboxes)
+      .filter(cb => cb.checked)
+      .map(cb => cb.value);
+    if (active.length === 0) return null;
+    const idx = Math.floor(Math.random() * active.length);
+    return active[idx];
+  }
+
+  function spinWheelAnimation(targetZone, callback) {
+    if (!wheel) {
+      callback && callback();
+      return;
+    }
+
+    const zoneAngles = {
+      "1": 0,
+      "3": 90,
+      "4": 180,
+      "5": 270
+      // זירה 2 ו־9 לא על הגלגל כרגע, אז רק טקסטואלית
+    };
+
+    const baseAngle = zoneAngles[targetZone] ?? 0;
+    const extraSpins = 4 + Math.floor(Math.random() * 3); // 4–6 סיבובים
+    const finalAngle = extraSpins * 360 + baseAngle;
+
+    wheel.style.transition = "transform 2s ease-out";
+    wheel.style.transform = `rotate(${finalAngle}deg)`;
+
+    setTimeout(() => {
+      callback && callback();
+    }, 2000);
+  }
+
+  function loadQuestionsForZone(zone) {
+    const concepts = getZoneConcepts(zone);
+    if (concepts.length === 0) {
+      questionNumberEl.textContent = "אין מושגים לזירה הזאת ב־data.js";
+      questionCodeEl.textContent = "";
+      conceptNameEl.textContent = "תבדוק את data.js לזירה " + zone;
+      zoneLabelEl.textContent = "זירה: " + zone;
+      enableScoreButtons(false);
+      return;
+    }
+
+    // ערבוב פשוט
+    const shuffled = [...concepts].sort(() => Math.random() - 0.5);
+    currentQuestions = shuffled.slice(0, ROUND_QUESTIONS);
+    currentQuestionIndex = 0;
+    totalQuestionsAsked = 0;
+    currentZone = zone;
+    targetScore = Math.max(20, currentQuestions.length * 10);
+    targetScoreLabel.textContent = "מטרה: " + targetScore + " נקודות";
+
+    showCurrentQuestion();
+    enableScoreButtons(true);
+    startTimer();
+  }
+
+  function showCurrentQuestion() {
+    if (!currentQuestions.length) return;
+    const raw = currentQuestions[currentQuestionIndex];
+    const c = normalizeConcept(raw);
+
+    questionNumberEl.textContent = "שאלה " + (currentQuestionIndex + 1) + " מתוך " + currentQuestions.length;
+    questionCodeEl.textContent = c.code ? "קוד: " + c.code : "";
+    zoneLabelEl.textContent = "זירה: " + (currentZone || "-");
+    conceptNameEl.textContent = c.name;
+  }
+
+  function goToNextQuestion() {
+    if (!currentQuestions.length) return;
+    currentQuestionIndex++;
+    totalQuestionsAsked++;
+
+    if (currentQuestionIndex >= currentQuestions.length) {
+      stopTimer();
+      enableScoreButtons(false);
+      questionNumberEl.textContent = "הסתיימו " + currentQuestions.length + " שאלות לזירה הזאת";
+      questionCodeEl.textContent = "";
+      conceptNameEl.textContent = "סובב שוב את הגלגל לסיבוב חדש";
+      zoneLabelEl.textContent = "זירה: " + (currentZone || "-");
+      return;
+    }
+
+    showCurrentQuestion();
+  }
+
+  function getCurrentNormalizedConcept() {
+    if (!currentQuestions.length) return null;
+    return normalizeConcept(currentQuestions[currentQuestionIndex]);
+  }
+
+  function markMistakeForCurrent() {
+    const c = getCurrentNormalizedConcept();
+    if (!c) return;
+    const key = c.id ?? c.code ?? c.name;
+    if (key != null) mistakesSet.add(String(key));
+  }
+
+  function handleTimeOver() {
+    markMistakeForCurrent();
+    updateScore(SCORE_TIMEOVER, "⏰ נגמר הזמן על השאלה הזאת (־20)");
+    goToNextQuestion();
+  }
+
+  // מסכי ניווט
+  btnStartGame.addEventListener("click", () => {
+    showScreen(gameScreen);
+    resultEl.textContent = "";
+    // להתחיל עם גלגל סגור, בלי שאלה
+    questionNumberEl.textContent = "סובב את הגלגל כדי להתחיל סיבוב";
+    questionCodeEl.textContent = "";
+    conceptNameEl.textContent = "המתן לבחירת הזירה";
+    zoneLabelEl.textContent = "זירה: -";
+    enableScoreButtons(false);
+    stopTimer();
+    remainingSeconds = TIME_LIMIT_SECONDS;
+    updateTimerDisplay();
   });
-}
 
-// הוספה ל-MASTERED
-function addMastered(zone, code) {
-  if (!isMastered(zone, code)) {
-    state.mastered.push({ zone: zone, code: code });
-  }
-}
-
-// הסרה מ-MASTERED
-function removeMastered(zone, code) {
-  state.mastered = state.mastered.filter(function (c) {
-    return !(c.zone === zone && c.code === code);
+  btnStudyMode.addEventListener("click", () => {
+    showScreen(studyScreen);
+    buildStudyListAndShowFirst();
   });
-}
 
-// החזרת רשימת מושגים לפי בחירה ב-select
-function getConceptPool(selectedValue) {
-  const pool = [];
+  btnBackHomeFromGame.addEventListener("click", () => {
+    stopTimer();
+    showScreen(homeScreen);
+  });
 
-  if (typeof conceptsByZone !== "object") {
-    console.error("conceptsByZone is missing from data.js");
-    return pool;
+  btnBackHomeFromStudy.addEventListener("click", () => {
+    showScreen(homeScreen);
+  });
+
+  // זירות כפתורי עזר
+  if (btnZonesAll) {
+    btnZonesAll.addEventListener("click", () => {
+      zoneCheckboxes.forEach(cb => cb.checked = true);
+    });
   }
 
-  // אם "all" - כל הזירות
-  if (selectedValue === "all") {
-    Object.keys(conceptsByZone).forEach(function (z) {
-      const zoneId = parseInt(z, 10);
-      const arr = conceptsByZone[z] || [];
-      arr.forEach(function (entry) {
-        // entry יכול להיות מספר או אובייקט עם code
-        if (typeof entry === "number" || typeof entry === "string") {
-          pool.push({ zone: zoneId, code: String(entry) });
-        } else if (entry && typeof entry === "object" && "code" in entry) {
-          pool.push({ zone: zoneId, code: String(entry.code) });
-        }
+  if (btnZonesClear) {
+    btnZonesClear.addEventListener("click", () => {
+      zoneCheckboxes.forEach(cb => cb.checked = false);
+    });
+  }
+
+  // סיבוב גלגל
+  if (btnSpin) {
+    btnSpin.addEventListener("click", () => {
+      const zone = pickRandomZone();
+      if (!zone) {
+        wheelMessage.textContent = "תבחר לפחות זירה אחת לפני הסיבוב";
+        return;
+      }
+      wheelMessage.textContent = "הגלגל מסתובב...";
+      spinWheelAnimation(zone, () => {
+        wheelMessage.textContent = "נבחרה זירה " + zone + ". נטען שאלות...";
+        loadQuestionsForZone(zone);
       });
     });
-    return pool;
   }
 
-  // זירה ספציפית
-  const zoneId = parseInt(selectedValue, 10);
-  const arr = conceptsByZone[zoneId] || [];
-  arr.forEach(function (entry) {
-    if (typeof entry === "number" || typeof entry === "string") {
-      pool.push({ zone: zoneId, code: String(entry) });
-    } else if (entry && typeof entry === "object" && "code" in entry) {
-      pool.push({ zone: zoneId, code: String(entry.code) });
-    }
+  // ניקוד כפתורים
+  btnCorrect.addEventListener("click", () => {
+    updateScore(SCORE_CORRECT, "✅ סימנת שהגדרת נכון (+5)");
+    goToNextQuestion();
   });
 
-  return pool;
-}
+  btnPartial.addEventListener("click", () => {
+    markMistakeForCurrent();
+    updateScore(SCORE_PARTIAL, "⚖️ סימנת שההגדרה הייתה חלקית (+3)");
+    goToNextQuestion();
+  });
 
-// רנדומלי מתוך מערך
-function pickRandom(array) {
-  if (!array.length) return null;
-  const idx = Math.floor(Math.random() * array.length);
-  return array[idx];
-}
-
-// עדכון כל הטקסטים של הסטטיסטיקה והקוד הנוכחי
-function updateStatsUI() {
-  const questionsCount = document.getElementById("questionsCount");
-  const masteredCount = document.getElementById("masteredCount");
-  const currentCodeLabel = document.getElementById("currentCodeLabel");
-  const currentZoneLabel = document.getElementById("currentZoneLabel");
-  const conceptCode = document.getElementById("conceptCode");
-  const conceptMeta = document.getElementById("conceptMeta");
-  const chatPromptExample = document.getElementById("chatPromptExample");
-
-  if (questionsCount) questionsCount.textContent = String(state.questionsAnswered);
-  if (masteredCount) masteredCount.textContent = String(state.mastered.length);
-
-  if (state.current) {
-    const z = state.current.zone;
-    const c = state.current.code;
-    const zoneLabel = ZONE_LABELS[z] || ("זירה " + z);
-
-    if (currentCodeLabel) currentCodeLabel.textContent = c;
-    if (currentZoneLabel) currentZoneLabel.textContent = zoneLabel;
-    if (conceptCode) conceptCode.textContent = c;
-    if (conceptMeta) {
-      conceptMeta.textContent =
-        zoneLabel + " – הגדר את המושג במילים שלך, בלי להסתכל בסיכום.";
+  btnWrong.addEventListener("click", () => {
+    markMistakeForCurrent();
+    const c = getCurrentNormalizedConcept();
+    if (c && popupOverlay) {
+      popupConceptName.textContent = c.name;
+      popupDefinition.textContent = c.definition || "אין כרגע הגדרה מלאה במערכת.";
+      popupOverlay.style.display = "flex";
     }
-    if (chatPromptExample) {
-      chatPromptExample.textContent = c + " - " + "התיאור שלך למושג";
-    }
-  } else {
-    if (currentCodeLabel) currentCodeLabel.textContent = "-";
-    if (currentZoneLabel) currentZoneLabel.textContent = "-";
-    if (conceptCode) conceptCode.textContent = 'לחץ על "סיבוב גלגל"';
-    if (conceptMeta) {
-      conceptMeta.textContent =
-        "המערכת תגריל קוד מתוך הזירה שנבחרת ותציג כאן.";
-    }
-    if (chatPromptExample) {
-      chatPromptExample.textContent = "107 - מה שהמוען מנסה להעביר לנמען";
-    }
-  }
-}
+    updateScore(SCORE_WRONG, "❌ סימנת שהייתה טעות (־10)");
+    goToNextQuestion();
+  });
 
-// מילוי / ניקוי שדה התשובה לפי הקוד הנוכחי
-function syncAnswerField() {
-  const answerInput = document.getElementById("answerInput");
-  if (!answerInput) return;
+  btnTimeOver.addEventListener("click", () => {
+    handleTimeOver();
+  });
 
-  if (!state.current) {
-    answerInput.value = "";
-    return;
-  }
+  btnResetScore.addEventListener("click", () => {
+    currentScore = 0;
+    scoreEl.textContent = "⭐ ניקוד: 0";
+    resultEl.textContent = "";
+    resultEl.className = "";
+  });
 
-  const key = conceptKey(state.current.zone, state.current.code);
-  if (state.answers[key]) {
-    answerInput.value = state.answers[key];
-  } else {
-    answerInput.value = "";
-  }
-}
-
-// הצגת הודעה בתיבת feedback
-function showFeedback(type, message) {
-  const feedbackBox = document.getElementById("feedbackBox");
-  if (!feedbackBox) return;
-
-  feedbackBox.style.display = "block";
-  feedbackBox.textContent = message || "";
-
-  feedbackBox.classList.remove("ok", "partial", "error");
-
-  if (type === "ok") feedbackBox.classList.add("ok");
-  else if (type === "partial") feedbackBox.classList.add("partial");
-  else if (type === "error") feedbackBox.classList.add("error");
-}
-
-// בחירת מושג חדש
-function spinForNewConcept() {
-  const zoneSelect = document.getElementById("zoneSelect");
-  if (!zoneSelect) return;
-
-  const selected = zoneSelect.value || "all";
-  const pool = getConceptPool(selected);
-
-  if (!pool.length) {
-    showFeedback("error", "לא נמצאו מושגים לזירה הזו. בדוק את data.js.");
-    return;
-  }
-
-  // שלא יחזור אותו קוד פעמיים ברצף אם אפשר
-  let options = pool;
-  if (state.current && pool.length > 1) {
-    options = pool.filter(function (c) {
-      return !(c.zone === state.current.zone && c.code === state.current.code);
+  // פופאפ הסבר
+  if (btnPopupOk && popupOverlay) {
+    btnPopupOk.addEventListener("click", () => {
+      popupOverlay.style.display = "none";
     });
-    if (!options.length) {
-      options = pool;
-    }
   }
 
-  const chosen = pickRandom(options);
-  if (!chosen) {
-    showFeedback("error", "בעיה בבחירת קוד. נסה שוב.");
-    return;
+  // פופאפ זכייה
+  if (btnWinContinue && btnWinReset && winOverlay) {
+    btnWinContinue.addEventListener("click", () => {
+      winOverlay.style.display = "none";
+    });
+    btnWinReset.addEventListener("click", () => {
+      winOverlay.style.display = "none";
+      currentScore = 0;
+      scoreEl.textContent = "⭐ ניקוד: 0";
+      resultEl.textContent = "";
+      resultEl.className = "";
+    });
   }
 
-  state.current = { zone: chosen.zone, code: chosen.code };
-  saveState();
-  updateStatsUI();
-  syncAnswerField();
-  showFeedback("ok", "הוגרל קוד חדש. נסה להגדיר אותו לפני שאתה מסתכל בסיכום.");
-}
+  // מצב לימוד
+  let studyList = [];
+  let studyIndex = 0;
 
-// סימון תוצאה (נכון/חלקי/טעות)
-function markResult(resultType) {
-  if (!state.current) {
-    showFeedback("error", "אין קוד פעיל. קודם סובב גלגל.");
-    return;
-  }
+  function buildStudyListAndShowFirst() {
+    const all = [];
 
-  const z = state.current.zone;
-  const c = state.current.code;
-  let delta = 0;
-  let msg = "";
+    Object.keys(conceptsByZone).forEach(zoneKey => {
+      const list = getZoneConcepts(zoneKey);
+      list.forEach(item => {
+        const c = normalizeConcept(item);
+        all.push({
+          ...c,
+          zone: zoneKey
+        });
+      });
+    });
 
-  if (resultType === "correct") {
-    delta = 5;
-    addMastered(z, c);
-    msg = "סימנת: נכון לגמרי. קיבלת 5 נקודות והמושג נכנס ל־MASTERED.";
-  } else if (resultType === "partial") {
-    delta = 3;
-    msg = "סימנת: נכון חלקית. קיבלת 3 נקודות, אבל המושג לא נכנס ל־MASTERED.";
-  } else if (resultType === "wrong") {
-    delta = -10;
-    const wasMastered = isMastered(z, c);
-    if (wasMastered) {
-      removeMastered(z, c);
-      msg = "סימנת: טעות. ירדו 10 נקודות והמושג הוסר מ־MASTERED (אם היה שם).";
-    } else {
-      msg = "סימנת: טעות. ירדו 10 נקודות.";
-    }
-  }
+    // סינון לפי מקור/זירה/חיפוש
+    const src = studySourceFilter.value;
+    const zoneFilter = studyZoneFilter.value;
+    const searchText = studySearchInput.value.trim();
 
-  state.points += delta;
-  state.questionsAnswered += 1;
-  saveState();
-  updateStatsUI();
-
-  if (resultType === "correct") {
-    showFeedback("ok", msg);
-  } else if (resultType === "partial") {
-    showFeedback("partial", msg);
-  } else {
-    showFeedback("error", msg);
-  }
-}
-
-// שמירת תשובה למושג הנוכחי
-function saveAnswerForCurrent() {
-  if (!state.current) {
-    showFeedback("error", "אין קוד פעיל. קודם סובב גלגל.");
-    return;
-  }
-
-  const answerInput = document.getElementById("answerInput");
-  if (!answerInput) return;
-
-  const text = answerInput.value.trim();
-  const key = conceptKey(state.current.zone, state.current.code);
-
-  if (!text) {
-    // אם ריק - מחיקה
-    delete state.answers[key];
-    saveState();
-    showFeedback("ok", "התשובה למושג הזה נמחקה.");
-    return;
-  }
-
-  state.answers[key] = text;
-  saveState();
-  showFeedback(
-    "ok",
-    "התשובה נשמרה למושג הזה. עכשיו אפשר לשלוח לצאט בפורמט: 'קוד - תיאור'."
-  );
-}
-
-// ניקוי שדה התשובה בלבד
-function clearAnswerField() {
-  const answerInput = document.getElementById("answerInput");
-  if (!answerInput) return;
-  answerInput.value = "";
-  if (state.current) {
-    const key = conceptKey(state.current.zone, state.current.code);
-    delete state.answers[key];
-    saveState();
-  }
-  showFeedback("ok", "שדה התשובה נוקה. אם הייתה תשובה שמורה למושג הזה, היא נמחקה.");
-}
-
-// איפוס מידע של המושג הנוכחי בלבד
-function resetCurrentConceptData() {
-  if (!state.current) {
-    showFeedback("error", "אין קוד פעיל לאיפוס.");
-    return;
-  }
-  const z = state.current.zone;
-  const c = state.current.code;
-  const key = conceptKey(z, c);
-
-  removeMastered(z, c);
-  delete state.answers[key];
-
-  saveState();
-  syncAnswerField();
-  updateStatsUI();
-  showFeedback(
-    "ok",
-    "נתוני המושג הנוכחי אופסו (תשובה שמורה וסטטוס MASTERED). הנקודות ההיסטוריות לא שונו."
-  );
-}
-
-// איפוס כל הנתונים
-function resetAllData() {
-  const ok = window.confirm("לאפס את כל הנתונים במכשיר הזה? נקודות, MASTERED ותשובות יימחקו.");
-  if (!ok) return;
-
-  state = {
-    points: 0,
-    questionsAnswered: 0,
-    mastered: [],
-    answers: {},
-    current: null
-  };
-  saveState();
-  updateStatsUI();
-  syncAnswerField();
-  showFeedback("ok", "כל הנתונים אופסו בהצלחה.");
-}
-
-// חיבור כל האירועים
-document.addEventListener("DOMContentLoaded", function () {
-  // טעינת מצב קודם
-  loadState();
-
-  // התאמת תווית מצב לפי מכשיר שנשמר (סתם קוסמטי)
-  try {
-    const device = localStorage.getItem("nm_device_mode");
-    const modeLabel = document.getElementById("modeLabel");
-    if (modeLabel) {
-      if (device === "mobile") {
-        modeLabel.textContent = "קודים ללמידה (תצוגת נייד)";
-      } else if (device === "desktop") {
-        modeLabel.textContent = "קודים ללמידה (תצוגת מחשב)";
-      } else {
-        modeLabel.textContent = "קודים לזכירה";
+    studyList = all.filter(c => {
+      if (src === "mistakes") {
+        const key = String(c.id ?? c.code ?? c.name);
+        if (!mistakesSet.has(key)) return false;
       }
-    }
-  } catch (e) {}
-
-  // לחצנים ושדות
-  const spinButton = document.getElementById("spinButton");
-  const skipButton = document.getElementById("skipButton");
-  const markCorrectBtn = document.getElementById("markCorrect");
-  const markPartialBtn = document.getElementById("markPartial");
-  const markWrongBtn = document.getElementById("markWrong");
-  const submitAnswerBtn = document.getElementById("submitAnswer");
-  const clearAnswerBtn = document.getElementById("clearAnswer");
-  const resetCurrentBtn = document.getElementById("resetCurrent");
-  const resetAllBtn = document.getElementById("resetAll");
-  const zoneSelect = document.getElementById("zoneSelect");
-
-  if (spinButton) {
-    spinButton.addEventListener("click", function () {
-      spinForNewConcept();
-    });
-  }
-
-  if (skipButton) {
-    skipButton.addEventListener("click", function () {
-      spinForNewConcept();
-      showFeedback("partial", "דילגת על המושג הקודם. לא נוספו או נגרעו נקודות.");
-    });
-  }
-
-  if (markCorrectBtn) {
-    markCorrectBtn.addEventListener("click", function () {
-      markResult("correct");
-    });
-  }
-
-  if (markPartialBtn) {
-    markPartialBtn.addEventListener("click", function () {
-      markResult("partial");
-    });
-  }
-
-  if (markWrongBtn) {
-    markWrongBtn.addEventListener("click", function () {
-      markResult("wrong");
-    });
-  }
-
-  if (submitAnswerBtn) {
-    submitAnswerBtn.addEventListener("click", function () {
-      saveAnswerForCurrent();
-    });
-  }
-
-  if (clearAnswerBtn) {
-    clearAnswerBtn.addEventListener("click", function () {
-      clearAnswerField();
-    });
-  }
-
-  if (resetCurrentBtn) {
-    resetCurrentBtn.addEventListener("click", function () {
-      resetCurrentConceptData();
-    });
-  }
-
-  if (resetAllBtn) {
-    resetAllBtn.addEventListener("click", function () {
-      resetAllData();
-    });
-  }
-
-  if (zoneSelect) {
-    zoneSelect.addEventListener("change", function () {
-      // כשמשנים זירה רק מוחקים הודעת משוב וקצת טקסט
-      const feedbackBox = document.getElementById("feedbackBox");
-      if (feedbackBox) {
-        feedbackBox.style.display = "none";
+      if (zoneFilter !== "all" && String(c.zone) !== String(zoneFilter)) {
+        return false;
       }
+      if (searchText) {
+        const t = searchText.toLowerCase();
+        const inName = (c.name || "").toLowerCase().includes(t);
+        const inDef = (c.definition || "").toLowerCase().includes(t);
+        if (!inName && !inDef) return false;
+      }
+      return true;
+    });
+
+    if (!studyList.length) {
+      studyCounterEl.textContent = "לא נמצאו מושגים לפי הסינון";
+      studyConceptNameEl.textContent = "—";
+      studyDefinitionEl.textContent = "נסה להרחיב את החיפוש או לשנות זירה.";
+      return;
+    }
+
+    studyIndex = 0;
+    showStudyConcept();
+  }
+
+  function showStudyConcept() {
+    if (!studyList.length) return;
+    const c = studyList[studyIndex];
+    studyCounterEl.textContent = "מושג " + (studyIndex + 1) + " מתוך " + studyList.length + " (זירה " + c.zone + ")";
+    studyConceptNameEl.textContent = c.name;
+    studyDefinitionEl.textContent = c.definition || "";
+  }
+
+  if (btnApplyStudyFilter) {
+    btnApplyStudyFilter.addEventListener("click", () => {
+      buildStudyListAndShowFirst();
     });
   }
 
-  // עדכון ראשוני של ה־UI לפי מצב טעון
-  updateStatsUI();
-  syncAnswerField();
+  if (btnStudyNext) {
+    btnStudyNext.addEventListener("click", () => {
+      if (!studyList.length) return;
+      studyIndex = (studyIndex + 1) % studyList.length;
+      showStudyConcept();
+    });
+  }
+
+  if (btnStudyRandom) {
+    btnStudyRandom.addEventListener("click", () => {
+      if (!studyList.length) return;
+      const idx = Math.floor(Math.random() * studyList.length);
+      studyIndex = idx;
+      showStudyConcept();
+    });
+  }
+
+  // כשנכנסים לאתר: מסך בית
+  showScreen(homeScreen);
+  updateTimerDisplay();
 });
