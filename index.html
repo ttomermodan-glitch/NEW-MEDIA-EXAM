@@ -1,463 +1,793 @@
-// game.js
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>משחק מושגים – ניו מדיה</title>
 
-window.addEventListener("DOMContentLoaded", () => {
-  // מסכים
-  const homeScreen = document.getElementById("home-screen");
-  const gameScreen = document.getElementById("game-screen");
-  const studyScreen = document.getElementById("study-screen");
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-  // כפתורי ניווט ראשיים
-  const btnStartGame = document.getElementById("btn-start-game");
-  const btnStudyMode = document.getElementById("btn-study-mode");
-  const btnBackHomeFromGame = document.getElementById("btn-back-home-from-game");
-  const btnBackHomeFromStudy = document.getElementById("btn-back-home-from-study");
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #202a3b 0, #050814 55%, #000000 100%);
+      color: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
 
-  // גלגל וזירות
-  const btnSpin = document.getElementById("btn-spin");
-  const wheel = document.getElementById("wheel");
-  const wheelMessage = document.getElementById("wheel-message");
-  const zoneCheckboxes = document.querySelectorAll(".zone-filter");
-  const btnZonesAll = document.getElementById("btn-zones-all");
-  const btnZonesClear = document.getElementById("btn-zones-clear");
+    .app {
+      width: 100%;
+      max-width: 900px;
+      background: rgba(10, 12, 20, 0.96);
+      border-radius: 24px;
+      padding: 24px 28px 30px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(0, 194, 255, 0.35);
+      position: relative;
+      z-index: 1;
+    }
 
-  // שאלה וניקוד
-  const timerEl = document.getElementById("timer");
-  const scoreEl = document.getElementById("score");
-  const targetScoreLabel = document.getElementById("target-score-label");
-  const questionNumberEl = document.getElementById("question-number");
-  const questionCodeEl = document.getElementById("question-code");
-  const zoneLabelEl = document.getElementById("zone-label");
-  const conceptNameEl = document.getElementById("concept-name");
-  const resultEl = document.getElementById("game-result");
+    /* מצבי תצוגה */
+    .app.force-desktop {
+      max-width: 1100px;
+    }
 
-  const btnCorrect = document.getElementById("btn-correct");
-  const btnPartial = document.getElementById("btn-partial");
-  const btnWrong = document.getElementById("btn-wrong");
-  const btnTimeOver = document.getElementById("btn-timeover");
-  const btnResetScore = document.getElementById("btn-reset-score");
+    .app.force-mobile {
+      max-width: 480px;
+    }
 
-  // מצב לימוד
-  const studySourceFilter = document.getElementById("study-source-filter");
-  const studyZoneFilter = document.getElementById("study-zone-filter");
-  const studySearchInput = document.getElementById("study-search");
-  const btnApplyStudyFilter = document.getElementById("btn-apply-study-filter");
-  const studyCounterEl = document.getElementById("study-counter");
-  const studyConceptNameEl = document.getElementById("study-concept-name");
-  const studyDefinitionEl = document.getElementById("study-definition");
-  const btnStudyNext = document.getElementById("btn-study-next");
-  const btnStudyRandom = document.getElementById("btn-study-random");
+    .app.force-desktop #wheel-container {
+      width: 220px;
+      height: 220px;
+    }
 
-  // פופאפים
-  const popupOverlay = document.getElementById("popup-overlay");
-  const popupConceptName = document.getElementById("popup-concept-name");
-  const popupDefinition = document.getElementById("popup-definition");
-  const btnPopupOk = document.getElementById("btn-popup-ok");
+    .app.force-mobile #wheel-container {
+      width: 150px;
+      height: 150px;
+    }
 
-  const winOverlay = document.getElementById("win-overlay");
-  const btnWinContinue = document.getElementById("btn-win-continue");
-  const btnWinReset = document.getElementById("btn-win-reset");
+    h1, h2, h3 {
+      margin: 0 0 10px;
+    }
 
-  // נתונים מה־data.js
-  const conceptsByZone = window.conceptsByZone || {};
-  const ROUND_QUESTIONS = 3;
-  const TIME_LIMIT_SECONDS = 5 * 60;
-  const SCORE_CORRECT = 5;
-  const SCORE_PARTIAL = 3;
-  const SCORE_WRONG = -10;
-  const SCORE_TIMEOVER = -20;
+    h1 {
+      font-size: 30px;
+      letter-spacing: 1px;
+      text-align: center;
+    }
 
-  let currentScore = 0;
-  let targetScore = 50;
-  let timer = null;
-  let remainingSeconds = TIME_LIMIT_SECONDS;
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #a0b3c6;
+      margin-bottom: 22px;
+    }
 
-  let currentZone = null;
-  let currentQuestions = [];
-  let currentQuestionIndex = 0;
-  let totalQuestionsAsked = 0;
+    .hidden {
+      display: none;
+    }
 
-  const mistakesSet = new Set(); // ids/קודים שטעית בהם
+    .center {
+      text-align: center;
+    }
 
-  // פונקציות עזר קטנות
-  function showScreen(screen) {
-    homeScreen.classList.add("hidden");
-    gameScreen.classList.add("hidden");
-    studyScreen.classList.add("hidden");
-    screen.classList.remove("hidden");
-  }
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 22px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 6px;
+      background: linear-gradient(135deg, #00c2ff, #0070ff);
+      color: #fff;
+      font-weight: 600;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+      box-shadow: 0 8px 20px rgba(0, 194, 255, 0.4);
+      touch-action: manipulation;
+    }
 
-  function formatTime(sec) {
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(0, 194, 255, 0.6);
+    }
 
-  function updateTimerDisplay() {
-    timerEl.textContent = "⏱️ " + formatTime(remainingSeconds);
-  }
+    .btn.secondary {
+      background: rgba(255, 255, 255, 0.04);
+      box-shadow: none;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
 
-  function startTimer() {
-    stopTimer();
-    remainingSeconds = TIME_LIMIT_SECONDS;
-    updateTimerDisplay();
-    timer = setInterval(() => {
-      remainingSeconds--;
-      if (remainingSeconds <= 0) {
-        remainingSeconds = 0;
-        updateTimerDisplay();
-        stopTimer();
-        handleTimeOver();
-      } else {
-        updateTimerDisplay();
+    .btn.secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    .btn.danger {
+      background: linear-gradient(135deg, #ff3b3b, #b70000);
+      box-shadow: 0 8px 20px rgba(255, 59, 59, 0.4);
+    }
+
+    .btn.small-btn {
+      padding: 6px 14px;
+      font-size: 13px;
+      margin: 4px;
+    }
+
+    .home-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-size: 12px;
+      color: #d3e4ff;
+    }
+
+    .section-title {
+      margin-top: 18px;
+      margin-bottom: 6px;
+      font-size: 15px;
+      color: #d3e4ff;
+      font-weight: 600;
+    }
+
+    #game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+
+    #timer {
+      font-size: 18px;
+      font-weight: 600;
+      color: #ffdd57;
+    }
+
+    #score {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    #target-score-label {
+      margin-top: 4px;
+    }
+
+    #zone-filter-bar {
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 10px 12px;
+      font-size: 14px;
+      margin-bottom: 16px;
+      background: radial-gradient(circle at top left, rgba(0, 194, 255, 0.12), rgba(5, 8, 20, 0.9));
+    }
+
+    #zone-filter-bar label {
+      margin-right: 10px;
+      font-size: 13px;
+    }
+
+    #zone-filter-bar input[type="checkbox"] {
+      margin-left: 4px;
+    }
+
+    #wheel-section {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    #wheel-container {
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      border: 4px solid rgba(0, 194, 255, 0.6);
+      background: radial-gradient(circle at center, #1b2238, #050814);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #pointer {
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-bottom: 18px solid #ffdd57;
+      position: absolute;
+      top: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+    }
+
+    #wheel {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 3px dashed rgba(255, 255, 255, 0.45);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 2s ease-out;
+    }
+
+    #wheel-labels span {
+      position: absolute;
+      font-size: 13px;
+      color: #fff;
+      text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+      font-weight: 600;
+    }
+
+    #label-zone-1 { top: 8px; left: 50%; transform: translateX(-50%); }
+    #label-zone-3 { right: 4px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+    #label-zone-4 { bottom: 8px; left: 50%; transform: translateX(-50%) rotate(180deg); }
+    #label-zone-5 { left: 4px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+
+    #wheel-message {
+      font-size: 13px;
+      color: #b6c5dd;
+      margin-top: 8px;
+      max-width: 260px;
+    }
+
+    #question-box {
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 10px 14px 12px;
+      background: radial-gradient(circle at top left, rgba(0, 194, 255, 0.16), rgba(5, 8, 20, 0.9));
+      margin-bottom: 10px;
+    }
+
+    #question-number {
+      font-size: 14px;
+      margin-bottom: 4px;
+      color: #c9e4ff;
+    }
+
+    #question-code {
+      font-size: 13px;
+      color: #ffdd57;
+      margin-bottom: 4px;
+    }
+
+    #zone-label {
+      font-size: 13px;
+      color: #8bd5ff;
+      margin-bottom: 4px;
+    }
+
+    #concept-name {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .note {
+      font-size: 13px;
+      color: #a0b3c6;
+    }
+
+    .score-controls,
+    .nav-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .score-controls .btn,
+    .nav-controls .btn {
+      flex: 1 1 180px;
+    }
+
+    #game-result {
+      margin-top: 8px;
+      font-size: 14px;
+      min-height: 18px;
+    }
+
+    #game-result.win {
+      color: #8cff9b;
+    }
+
+    #game-result.lose {
+      color: #ff8b8b;
+    }
+
+    /* מצב לימוד */
+    .study-filters {
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      background: rgba(5, 10, 25, 0.9);
+    }
+
+    .filter-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      gap: 6px;
+      font-size: 14px;
+    }
+
+    .filter-row label {
+      min-width: 50px;
+    }
+
+    .filter-row select,
+    .filter-row input {
+      flex: 1;
+      padding: 4px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(3, 8, 22, 0.9);
+      color: #f5f5f5;
+      font-size: 13px;
+    }
+
+    #study-box {
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 16px 14px;
+      background: radial-gradient(circle at top left, rgba(151, 71, 255, 0.18), rgba(5, 8, 20, 0.96));
+      margin-bottom: 10px;
+    }
+
+    #study-counter {
+      font-size: 13px;
+      color: #ffdd57;
+      margin-bottom: 6px;
+    }
+
+    #study-concept-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    #study-definition {
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    /* פופאפ הסבר */
+    #popup-overlay,
+    #win-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .popup-card {
+      background: rgba(10, 14, 30, 0.98);
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+      max-width: 450px;
+      width: 90%;
+      border: 1px solid rgba(0, 194, 255, 0.4);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
+    }
+
+    .popup-title {
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+
+    .popup-definition {
+      font-size: 14px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+      direction: rtl;
+    }
+
+    .popup-buttons {
+      margin-top: 12px;
+      text-align: left;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* בחירת תצוגה */
+    .layout-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.82);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .layout-card {
+      background: rgba(10, 14, 30, 0.98);
+      border-radius: 18px;
+      padding: 20px 22px 18px;
+      max-width: 420px;
+      width: 92%;
+      border: 1px solid rgba(0, 194, 255, 0.5);
+      text-align: center;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.85);
+    }
+
+    .layout-card h2 {
+      margin-bottom: 8px;
+    }
+
+    .layout-card p {
+      font-size: 14px;
+      color: #bdcbe3;
+      margin-bottom: 12px;
+    }
+
+    .layout-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+
+    .layout-small-note {
+      font-size: 12px;
+      color: #9fb3d5;
+    }
+
+    #layout-toggle-bar {
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    #layout-toggle-bar .btn {
+      width: 100%;
+      max-width: 260px;
+    }
+
+    #credits-box p {
+      margin: 4px 0;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 8px;
       }
-    }, 1000);
-  }
 
-  function stopTimer() {
-    if (timer) {
-      clearInterval(timer);
-      timer = null;
-    }
-  }
-
-  function updateScore(delta, reasonText) {
-    currentScore += delta;
-    scoreEl.textContent = "⭐ ניקוד: " + currentScore;
-    if (reasonText) {
-      resultEl.textContent = reasonText;
-      resultEl.className = "";
-      if (delta > 0) resultEl.classList.add("win");
-      if (delta < 0) resultEl.classList.add("lose");
-    }
-    if (currentScore >= targetScore) {
-      winOverlay.style.display = "flex";
-    }
-  }
-
-  function enableScoreButtons(enabled) {
-    [btnCorrect, btnPartial, btnWrong, btnTimeOver].forEach(btn => {
-      btn.disabled = !enabled;
-    });
-  }
-
-  function getZoneConcepts(zone) {
-    const list = conceptsByZone[zone] || conceptsByZone[String(zone)] || [];
-    return Array.isArray(list) ? list : [];
-  }
-
-  function normalizeConcept(concept) {
-    if (!concept) return { id: null, code: "", name: "—", definition: "—" };
-    const id = concept.id ?? concept.code ?? concept.key ?? null;
-    const code = concept.code ?? concept.id ?? "";
-    const name = concept.name || concept.term || concept.title || concept.conceptName || ("מושג " + code);
-    const definition = concept.definition || concept.def || concept.text || concept.description || "";
-    return { id, code, name, definition };
-  }
-
-  function pickRandomZone() {
-    const active = Array.from(zoneCheckboxes)
-      .filter(cb => cb.checked)
-      .map(cb => cb.value);
-    if (active.length === 0) return null;
-    const idx = Math.floor(Math.random() * active.length);
-    return active[idx];
-  }
-
-  function spinWheelAnimation(targetZone, callback) {
-    if (!wheel) {
-      callback && callback();
-      return;
-    }
-
-    const zoneAngles = {
-      "1": 0,
-      "3": 90,
-      "4": 180,
-      "5": 270
-      // זירה 2 ו־9 לא על הגלגל כרגע, אז רק טקסטואלית
-    };
-
-    const baseAngle = zoneAngles[targetZone] ?? 0;
-    const extraSpins = 4 + Math.floor(Math.random() * 3); // 4–6 סיבובים
-    const finalAngle = extraSpins * 360 + baseAngle;
-
-    wheel.style.transition = "transform 2s ease-out";
-    wheel.style.transform = `rotate(${finalAngle}deg)`;
-
-    setTimeout(() => {
-      callback && callback();
-    }, 2000);
-  }
-
-  function loadQuestionsForZone(zone) {
-    const concepts = getZoneConcepts(zone);
-    if (concepts.length === 0) {
-      questionNumberEl.textContent = "אין מושגים לזירה הזאת ב־data.js";
-      questionCodeEl.textContent = "";
-      conceptNameEl.textContent = "תבדוק את data.js לזירה " + zone;
-      zoneLabelEl.textContent = "זירה: " + zone;
-      enableScoreButtons(false);
-      return;
-    }
-
-    // ערבוב פשוט
-    const shuffled = [...concepts].sort(() => Math.random() - 0.5);
-    currentQuestions = shuffled.slice(0, ROUND_QUESTIONS);
-    currentQuestionIndex = 0;
-    totalQuestionsAsked = 0;
-    currentZone = zone;
-    targetScore = Math.max(20, currentQuestions.length * 10);
-    targetScoreLabel.textContent = "מטרה: " + targetScore + " נקודות";
-
-    showCurrentQuestion();
-    enableScoreButtons(true);
-    startTimer();
-  }
-
-  function showCurrentQuestion() {
-    if (!currentQuestions.length) return;
-    const raw = currentQuestions[currentQuestionIndex];
-    const c = normalizeConcept(raw);
-
-    questionNumberEl.textContent = "שאלה " + (currentQuestionIndex + 1) + " מתוך " + currentQuestions.length;
-    questionCodeEl.textContent = c.code ? "קוד: " + c.code : "";
-    zoneLabelEl.textContent = "זירה: " + (currentZone || "-");
-    conceptNameEl.textContent = c.name;
-  }
-
-  function goToNextQuestion() {
-    if (!currentQuestions.length) return;
-    currentQuestionIndex++;
-    totalQuestionsAsked++;
-
-    if (currentQuestionIndex >= currentQuestions.length) {
-      stopTimer();
-      enableScoreButtons(false);
-      questionNumberEl.textContent = "הסתיימו " + currentQuestions.length + " שאלות לזירה הזאת";
-      questionCodeEl.textContent = "";
-      conceptNameEl.textContent = "סובב שוב את הגלגל לסיבוב חדש";
-      zoneLabelEl.textContent = "זירה: " + (currentZone || "-");
-      return;
-    }
-
-    showCurrentQuestion();
-  }
-
-  function getCurrentNormalizedConcept() {
-    if (!currentQuestions.length) return null;
-    return normalizeConcept(currentQuestions[currentQuestionIndex]);
-  }
-
-  function markMistakeForCurrent() {
-    const c = getCurrentNormalizedConcept();
-    if (!c) return;
-    const key = c.id ?? c.code ?? c.name;
-    if (key != null) mistakesSet.add(String(key));
-  }
-
-  function handleTimeOver() {
-    markMistakeForCurrent();
-    updateScore(SCORE_TIMEOVER, "⏰ נגמר הזמן על השאלה הזאת (־20)");
-    goToNextQuestion();
-  }
-
-  // מסכי ניווט
-  btnStartGame.addEventListener("click", () => {
-    showScreen(gameScreen);
-    resultEl.textContent = "";
-    // להתחיל עם גלגל סגור, בלי שאלה
-    questionNumberEl.textContent = "סובב את הגלגל כדי להתחיל סיבוב";
-    questionCodeEl.textContent = "";
-    conceptNameEl.textContent = "המתן לבחירת הזירה";
-    zoneLabelEl.textContent = "זירה: -";
-    enableScoreButtons(false);
-    stopTimer();
-    remainingSeconds = TIME_LIMIT_SECONDS;
-    updateTimerDisplay();
-  });
-
-  btnStudyMode.addEventListener("click", () => {
-    showScreen(studyScreen);
-    buildStudyListAndShowFirst();
-  });
-
-  btnBackHomeFromGame.addEventListener("click", () => {
-    stopTimer();
-    showScreen(homeScreen);
-  });
-
-  btnBackHomeFromStudy.addEventListener("click", () => {
-    showScreen(homeScreen);
-  });
-
-  // זירות כפתורי עזר
-  if (btnZonesAll) {
-    btnZonesAll.addEventListener("click", () => {
-      zoneCheckboxes.forEach(cb => cb.checked = true);
-    });
-  }
-
-  if (btnZonesClear) {
-    btnZonesClear.addEventListener("click", () => {
-      zoneCheckboxes.forEach(cb => cb.checked = false);
-    });
-  }
-
-  // סיבוב גלגל
-  if (btnSpin) {
-    btnSpin.addEventListener("click", () => {
-      const zone = pickRandomZone();
-      if (!zone) {
-        wheelMessage.textContent = "תבחר לפחות זירה אחת לפני הסיבוב";
-        return;
+      .app {
+        padding: 16px 12px 18px;
+        border-radius: 18px;
       }
-      wheelMessage.textContent = "הגלגל מסתובב...";
-      spinWheelAnimation(zone, () => {
-        wheelMessage.textContent = "נבחרה זירה " + zone + ". נטען שאלות...";
-        loadQuestionsForZone(zone);
+
+      h1 {
+        font-size: 22px;
+      }
+
+      .subtitle {
+        font-size: 13px;
+        margin-bottom: 12px;
+      }
+
+      .home-buttons {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .home-buttons .btn {
+        width: 100%;
+        text-align: center;
+      }
+
+      #game-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      #wheel-container {
+        width: 150px;
+        height: 150px;
+      }
+
+      .score-controls .btn,
+      .nav-controls .btn {
+        width: 100%;
+      }
+
+      #study-box {
+        padding: 14px 12px;
+        border-radius: 16px;
+      }
+
+      #btn-study-next,
+      #btn-study-random {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- בחירת מצב תצוגה -->
+  <div id="layout-chooser" class="layout-overlay">
+    <div class="layout-card">
+      <h2>עם איזה תצוגה לעבוד?</h2>
+      <p>בחר אם לעבוד בתצוגת מחשב או נייד. אפשר להחליף אחר כך בתחתית.</p>
+      <div class="layout-buttons">
+        <button id="btn-layout-desktop" class="btn">💻 תצוגת מחשב</button>
+        <button id="btn-layout-mobile" class="btn secondary">📱 תצוגת נייד</button>
+      </div>
+      <div class="layout-small-note">
+        הבחירה נשמרת בדפדפן שלך.
+      </div>
+    </div>
+  </div>
+
+  <div class="app">
+
+    <!-- מסך בית -->
+    <div id="home-screen">
+      <h1>משחק מושגים – ניו מדיה</h1>
+      <div class="subtitle">
+        גלגל מושגים • 3 שאלות בכל סיבוב • היעד מחושב אוטומטית לפי כמות המושגים
+      </div>
+
+      <div class="center">
+        <div class="tag">זירות במשחק: 1, 2, 3, 4, 5 (אפשר גם 9)</div><br />
+        <div class="tag">מצב לימוד כולל גם זירה 9 – פרסום</div>
+      </div>
+
+      <div class="home-buttons">
+        <button id="btn-start-game" class="btn">🎮 התחל משחק</button>
+        <button id="btn-study-mode" class="btn secondary">📚 מצב לימוד</button>
+        <button id="btn-credits" class="btn secondary">©️ קרדיטים</button>
+      </div>
+
+      <div id="credits-box" class="hidden">
+        <h3>קרדיטים ©️</h3>
+        <p>המשחק נבנה ועוצב על־ידי <b>תומר מודן</b>.</p>
+        <p>המשחק יוצר ונכתב בסיוע <b>ChatGPT</b>.</p>
+        <p>מצאת טעות או בעיה בהגדרה? תכתוב לתומר והוא יעדכן את המשחק.</p>
+      </div>
+    </div>
+
+    <!-- מסך משחק -->
+    <div id="game-screen" class="hidden">
+
+      <div id="game-header">
+        <div>
+          <div id="timer">⏱️ 05:00</div>
+        </div>
+        <div>
+          <div id="score">⭐ ניקוד: 0</div>
+          <div id="target-score-label" class="tag">מטרה: 50 נקודות</div>
+        </div>
+      </div>
+
+      <div id="zone-filter-bar">
+        <div class="section-title" style="margin-top:0;">זירות למשחק:</div>
+        <div>
+          <label><input type="checkbox" class="zone-filter" value="1" checked> זירה 1</label>
+          <label><input type="checkbox" class="zone-filter" value="2" checked> זירה 2</label>
+          <label><input type="checkbox" class="zone-filter" value="3" checked> זירה 3</label>
+          <label><input type="checkbox" class="zone-filter" value="4" checked> זירה 4</label>
+          <label><input type="checkbox" class="zone-filter" value="5" checked> זירה 5</label>
+          <label><input type="checkbox" class="zone-filter" value="9"> זירה 9 – פרסום</label>
+        </div>
+        <div style="margin-top:10px;">
+          <button id="btn-zones-all" class="btn secondary small-btn">כל הזירות</button>
+          <button id="btn-zones-clear" class="btn secondary small-btn">אפס בחירה</button>
+        </div>
+      </div>
+
+      <div id="wheel-section">
+        <div id="wheel-container">
+          <div id="pointer"></div>
+          <div id="wheel">
+            <div id="wheel-labels">
+              <span id="label-zone-1">זירה 1</span>
+              <span id="label-zone-3">זירה 3</span>
+              <span id="label-zone-4">זירה 4</span>
+              <span id="label-zone-5">זירה 5</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <button id="btn-spin" class="btn">🎯 סובב גלגל</button>
+          <div id="wheel-message">
+            סובב את הגלגל כדי לבחור זירה. אחרי העצירה יופיעו 3 מושגים מהזירה הזו והטיימר יתחיל לבד.
+          </div>
+        </div>
+      </div>
+
+      <div id="question-box">
+        <div id="question-number">עדיין אין שאלה – סובב את הגלגל</div>
+        <div id="question-code"></div>
+        <div id="zone-label">זירה: -</div>
+        <div id="concept-name">המתן לבחירת הזירה</div>
+        <div class="note">
+          את התשובה כותבים בצ׳אט איתי 😉  
+          תכתוב גם את <b>קוד השאלה</b> שמופיע כאן באתר.
+        </div>
+      </div>
+
+      <div class="section-title">ניקוד לשאלה הזאת:</div>
+      <div class="score-controls">
+        <button id="btn-correct" class="btn score-btn" disabled>✅ נכון (+5)</button>
+        <button id="btn-partial" class="btn secondary score-btn" disabled>⚖️ חלקי (+3)</button>
+        <button id="btn-wrong" class="btn danger score-btn" disabled>❌ טעות (-10 + הסבר)</button>
+        <button id="btn-timeover" class="btn danger score-btn" disabled>⏰ נגמר הזמן (-20 + הסבר)</button>
+      </div>
+
+      <div class="section-title">ניווט:</div>
+      <div class="nav-controls">
+        <button id="btn-reset-score" class="btn secondary">🔄 איפוס ניקוד</button>
+        <button id="btn-back-home-from-game" class="btn secondary">🏠 חזרה למסך הבית</button>
+      </div>
+
+      <div id="game-result"></div>
+    </div>
+
+    <!-- מסך מצב לימוד -->
+    <div id="study-screen" class="hidden">
+      <h2>מצב לימוד – כל המושגים</h2>
+      <div class="subtitle">
+        רואה מושג + הגדרה מלאה • לוחץ "הבנתי" למושג הבא  
+        אפשר לסנן לפי זירה / רק מושגים שטעית בהם / חיפוש לפי שם.
+      </div>
+
+      <div class="study-filters">
+        <div class="filter-row">
+          <label for="study-source-filter">מקור:</label>
+          <select id="study-source-filter">
+            <option value="all">כל המושגים</option>
+            <option value="mistakes">מושגים שטעיתי בהם</option>
+          </select>
+        </div>
+        <div class="filter-row">
+          <label for="study-zone-filter">זירה:</label>
+          <select id="study-zone-filter">
+            <option value="all">כל הזירות</option>
+            <option value="1">זירה 1</option>
+            <option value="2">זירה 2</option>
+            <option value="3">זירה 3</option>
+            <option value="4">זירה 4</option>
+            <option value="5">זירה 5</option>
+            <option value="9">זירה 9 – פרסום</option>
+          </select>
+        </div>
+        <div class="filter-row">
+          <label for="study-search">חיפוש:</label>
+          <input id="study-search" type="text" placeholder="הקלד שם מושג." />
+        </div>
+        <div id="study-filters-actions">
+          <button id="btn-apply-study-filter" class="btn secondary small-btn">החל סינון</button>
+        </div>
+      </div>
+
+      <div id="study-box">
+        <div id="study-counter">מושג 1 מתוך ?</div>
+        <div id="study-concept-name">—</div>
+        <div id="study-definition">—</div>
+      </div>
+
+      <div class="nav-controls">
+        <button id="btn-study-next" class="btn">✅ הבנתי – הבא</button>
+        <button id="btn-study-random" class="btn secondary">🎲 מושג אקראי</button>
+        <button id="btn-back-home-from-study" class="btn secondary">🏠 חזרה למסך הבית</button>
+      </div>
+    </div>
+
+    <!-- פופאפ הסבר -->
+    <div id="popup-overlay">
+      <div class="popup-card">
+        <div class="popup-title" id="popup-concept-name">מושג</div>
+        <div class="popup-definition" id="popup-definition"></div>
+        <div class="popup-buttons">
+          <button id="btn-popup-ok" class="btn">הבנתי</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- פופאפ זכייה -->
+    <div id="win-overlay">
+      <div class="popup-card">
+        <div class="popup-title">כל הכבוד! 🎉</div>
+        <div class="popup-definition">
+          הגעת ליעד הניקוד שהוגדר לפי כמות המושגים.<br>
+          אפשר להמשיך לשחק עם אותו ניקוד, או לאפס ולהתחיל מחדש.
+        </div>
+        <div class="popup-buttons">
+          <button id="btn-win-continue" class="btn secondary">להמשיך</button>
+          <button id="btn-win-reset" class="btn">איפוס ניקוד</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="layout-toggle-bar">
+      <button id="btn-toggle-layout" class="btn secondary small-btn">🖥️ / 📱 החלף מצב תצוגה</button>
+    </div>
+
+  </div>
+
+  <script src="data.js"></script>
+
+  <!-- סקריפט בחירת תצוגה + קרדיטים -->
+  <script>
+    window.addEventListener("DOMContentLoaded", function () {
+      const overlay = document.getElementById("layout-chooser");
+      const app = document.querySelector(".app");
+      const btnDesktop = document.getElementById("btn-layout-desktop");
+      const btnMobile = document.getElementById("btn-layout-mobile");
+      const btnToggle = document.getElementById("btn-toggle-layout");
+
+      const creditsBtn = document.getElementById("btn-credits");
+      const creditsBox = document.getElementById("credits-box");
+
+      function applyLayout(mode) {
+        app.classList.remove("force-desktop", "force-mobile");
+        if (mode === "desktop") app.classList.add("force-desktop");
+        if (mode === "mobile") app.classList.add("force-mobile");
+        localStorage.setItem("nm_layout_mode", mode);
+      }
+
+      let saved = localStorage.getItem("nm_layout_mode");
+      if (saved === "desktop" || saved === "mobile") {
+        applyLayout(saved);
+        overlay.style.display = "none";
+      }
+
+      btnDesktop.addEventListener("click", () => {
+        applyLayout("desktop");
+        overlay.style.display = "none";
       });
-    });
-  }
 
-  // ניקוד כפתורים
-  btnCorrect.addEventListener("click", () => {
-    updateScore(SCORE_CORRECT, "✅ סימנת שהגדרת נכון (+5)");
-    goToNextQuestion();
-  });
+      btnMobile.addEventListener("click", () => {
+        applyLayout("mobile");
+        overlay.style.display = "none";
+      });
 
-  btnPartial.addEventListener("click", () => {
-    markMistakeForCurrent();
-    updateScore(SCORE_PARTIAL, "⚖️ סימנת שההגדרה הייתה חלקית (+3)");
-    goToNextQuestion();
-  });
+      btnToggle.addEventListener("click", () => {
+        const isDesktop = app.classList.contains("force-desktop");
+        applyLayout(isDesktop ? "mobile" : "desktop");
+      });
 
-  btnWrong.addEventListener("click", () => {
-    markMistakeForCurrent();
-    const c = getCurrentNormalizedConcept();
-    if (c && popupOverlay) {
-      popupConceptName.textContent = c.name;
-      popupDefinition.textContent = c.definition || "אין כרגע הגדרה מלאה במערכת.";
-      popupOverlay.style.display = "flex";
-    }
-    updateScore(SCORE_WRONG, "❌ סימנת שהייתה טעות (־10)");
-    goToNextQuestion();
-  });
-
-  btnTimeOver.addEventListener("click", () => {
-    handleTimeOver();
-  });
-
-  btnResetScore.addEventListener("click", () => {
-    currentScore = 0;
-    scoreEl.textContent = "⭐ ניקוד: 0";
-    resultEl.textContent = "";
-    resultEl.className = "";
-  });
-
-  // פופאפ הסבר
-  if (btnPopupOk && popupOverlay) {
-    btnPopupOk.addEventListener("click", () => {
-      popupOverlay.style.display = "none";
-    });
-  }
-
-  // פופאפ זכייה
-  if (btnWinContinue && btnWinReset && winOverlay) {
-    btnWinContinue.addEventListener("click", () => {
-      winOverlay.style.display = "none";
-    });
-    btnWinReset.addEventListener("click", () => {
-      winOverlay.style.display = "none";
-      currentScore = 0;
-      scoreEl.textContent = "⭐ ניקוד: 0";
-      resultEl.textContent = "";
-      resultEl.className = "";
-    });
-  }
-
-  // מצב לימוד
-  let studyList = [];
-  let studyIndex = 0;
-
-  function buildStudyListAndShowFirst() {
-    const all = [];
-
-    Object.keys(conceptsByZone).forEach(zoneKey => {
-      const list = getZoneConcepts(zoneKey);
-      list.forEach(item => {
-        const c = normalizeConcept(item);
-        all.push({
-          ...c,
-          zone: zoneKey
+      if (creditsBtn && creditsBox) {
+        creditsBtn.addEventListener("click", () => {
+          const willShow = creditsBox.classList.contains("hidden");
+          creditsBox.classList.toggle("hidden", !willShow);
         });
-      });
-    });
-
-    // סינון לפי מקור/זירה/חיפוש
-    const src = studySourceFilter.value;
-    const zoneFilter = studyZoneFilter.value;
-    const searchText = studySearchInput.value.trim();
-
-    studyList = all.filter(c => {
-      if (src === "mistakes") {
-        const key = String(c.id ?? c.code ?? c.name);
-        if (!mistakesSet.has(key)) return false;
       }
-      if (zoneFilter !== "all" && String(c.zone) !== String(zoneFilter)) {
-        return false;
-      }
-      if (searchText) {
-        const t = searchText.toLowerCase();
-        const inName = (c.name || "").toLowerCase().includes(t);
-        const inDef = (c.definition || "").toLowerCase().includes(t);
-        if (!inName && !inDef) return false;
-      }
-      return true;
     });
+  </script>
 
-    if (!studyList.length) {
-      studyCounterEl.textContent = "לא נמצאו מושגים לפי הסינון";
-      studyConceptNameEl.textContent = "—";
-      studyDefinitionEl.textContent = "נסה להרחיב את החיפוש או לשנות זירה.";
-      return;
-    }
-
-    studyIndex = 0;
-    showStudyConcept();
-  }
-
-  function showStudyConcept() {
-    if (!studyList.length) return;
-    const c = studyList[studyIndex];
-    studyCounterEl.textContent = "מושג " + (studyIndex + 1) + " מתוך " + studyList.length + " (זירה " + c.zone + ")";
-    studyConceptNameEl.textContent = c.name;
-    studyDefinitionEl.textContent = c.definition || "";
-  }
-
-  if (btnApplyStudyFilter) {
-    btnApplyStudyFilter.addEventListener("click", () => {
-      buildStudyListAndShowFirst();
-    });
-  }
-
-  if (btnStudyNext) {
-    btnStudyNext.addEventListener("click", () => {
-      if (!studyList.length) return;
-      studyIndex = (studyIndex + 1) % studyList.length;
-      showStudyConcept();
-    });
-  }
-
-  if (btnStudyRandom) {
-    btnStudyRandom.addEventListener("click", () => {
-      if (!studyList.length) return;
-      const idx = Math.floor(Math.random() * studyList.length);
-      studyIndex = idx;
-      showStudyConcept();
-    });
-  }
-
-  // כשנכנסים לאתר: מסך בית
-  showScreen(homeScreen);
-  updateTimerDisplay();
-});
+  <script src="game.js"></script>
+</body>
+</html>
