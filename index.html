@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>משחק מושגים - גלגל הזירות</title>
+  <title>משחק מושגים – ניו מדיה</title>
 
   <style>
     * {
@@ -20,487 +20,855 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 20px;
     }
 
     .app {
       width: 100%;
-      max-width: 980px;
-      background: rgba(5, 8, 20, 0.95);
+      max-width: 900px;
+      background: rgba(10, 12, 20, 0.96);
       border-radius: 24px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
-      padding: 18px 18px 20px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .app::before {
-      content: "";
-      position: absolute;
-      inset: -40%;
-      background:
-        radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 60%),
-        radial-gradient(circle at bottom right, rgba(147, 51, 234, 0.2), transparent 55%);
-      opacity: 0.9;
-      pointer-events: none;
-    }
-
-    .content {
+      padding: 24px 28px 30px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(0, 194, 255, 0.35);
       position: relative;
       z-index: 1;
-      display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
-      gap: 16px;
     }
 
-    @media (max-width: 820px) {
-      .content {
-        grid-template-columns: minmax(0, 1fr);
-      }
+    /* מצבי תצוגה */
+    .app.force-desktop {
+      max-width: 1100px;
     }
 
-    .section {
-      background: rgba(15, 23, 42, 0.92);
-      border-radius: 18px;
-      padding: 14px 14px 16px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      position: relative;
-      overflow: hidden;
+    .app.force-mobile {
+      max-width: 480px;
     }
 
-    .section-title {
-      margin: 0 0 6px;
-      font-size: 1.05rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
+    .app.force-desktop #wheel-container {
+      width: 220px;
+      height: 220px;
     }
 
-    .badge {
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      background: rgba(37, 99, 235, 0.2);
-      border: 1px solid rgba(59, 130, 246, 0.6);
-      color: #bfdbfe;
-      white-space: nowrap;
+    .app.force-mobile #wheel-container {
+      width: 150px;
+      height: 150px;
     }
 
-    .row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 6px;
-      flex-wrap: wrap;
+    h1, h2, h3 {
+      margin: 0 0 10px;
     }
 
-    select,
-    textarea,
-    input[type="text"] {
-      width: 100%;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      background: rgba(15, 23, 42, 0.9);
-      color: #e5e7eb;
-      padding: 8px 12px;
-      font-size: 0.9rem;
-      outline: none;
+    h1 {
+      font-size: 30px;
+      letter-spacing: 1px;
+      text-align: center;
     }
 
-    select:focus,
-    textarea:focus,
-    input[type="text"]:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.4);
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #a0b3c6;
+      margin-bottom: 22px;
     }
 
-    textarea {
-      border-radius: 12px;
-      resize: vertical;
-      min-height: 90px;
-      max-height: 200px;
-      line-height: 1.4;
+    .hidden {
+      display: none;
+    }
+
+    .center {
+      text-align: center;
     }
 
     .btn {
       border: none;
       border-radius: 999px;
-      padding: 9px 14px;
-      font-size: 0.9rem;
+      padding: 10px 22px;
+      font-size: 16px;
       cursor: pointer;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-      color: white;
+      margin: 6px;
+      background: linear-gradient(135deg, #00c2ff, #0070ff);
+      color: #fff;
       font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
-      white-space: nowrap;
-    }
-
-    .btn.small {
-      padding: 6px 10px;
-      font-size: 0.8rem;
-    }
-
-    .btn.secondary {
-      background: rgba(148, 163, 184, 0.12);
-      color: #e5e7eb;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      font-weight: 500;
-    }
-
-    .btn.ghost {
-      background: transparent;
-      border: 1px dashed rgba(148, 163, 184, 0.5);
-      color: #9ca3af;
-      font-weight: 400;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+      box-shadow: 0 8px 20px rgba(0, 194, 255, 0.4);
+      touch-action: manipulation;
     }
 
     .btn:hover {
       transform: translateY(-1px);
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.7);
-      opacity: 0.96;
+      box-shadow: 0 10px 24px rgba(0, 194, 255, 0.6);
     }
 
-    .btn:active {
-      transform: none;
+    .btn.secondary {
+      background: rgba(255, 255, 255, 0.04);
       box-shadow: none;
-      opacity: 0.9;
+      border: 1px solid rgba(255, 255, 255, 0.12);
     }
 
-    .pill {
+    .btn.secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    .btn.danger {
+      background: linear-gradient(135deg, #ff3b3b, #b70000);
+      box-shadow: 0 8px 20px rgba(255, 59, 59, 0.4);
+    }
+
+    .btn.small-btn {
+      padding: 6px 14px;
+      font-size: 13px;
+      margin: 4px;
+    }
+
+    .home-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    .tag {
+      display: inline-block;
       padding: 4px 10px;
       border-radius: 999px;
-      font-size: 0.8rem;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      color: #e5e7eb;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-size: 12px;
+      color: #d3e4ff;
     }
 
-    .pill strong {
+    .section-title {
+      margin-top: 18px;
+      margin-bottom: 6px;
+      font-size: 15px;
+      color: #d3e4ff;
       font-weight: 600;
     }
 
-    .stats-row {
+    #game-header {
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .stat-card {
-      flex: 1;
-      min-width: 130px;
-      padding: 8px 10px;
-      border-radius: 12px;
-      background: rgba(15, 23, 42, 0.96);
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      font-size: 0.8rem;
-    }
-
-    .stat-label {
-      color: #9ca3af;
-      margin-bottom: 2px;
-    }
-
-    .stat-value {
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
-
-    .concept-display {
-      margin-top: 12px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(55, 65, 81, 0.9);
-      font-size: 0.92rem;
-    }
-
-    .concept-code {
-      font-size: 1.4rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-    }
-
-    .concept-meta {
-      margin-top: 4px;
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
-
-    .feedback {
-      margin-top: 8px;
-      font-size: 0.85rem;
-      border-radius: 12px;
-      padding: 8px 10px;
-      line-height: 1.4;
-      display: none;
-    }
-
-    .feedback.ok {
-      background: rgba(22, 163, 74, 0.1);
-      border: 1px solid rgba(34, 197, 94, 0.8);
-      color: #bbf7d0;
-    }
-
-    .feedback.partial {
-      background: rgba(234, 179, 8, 0.09);
-      border: 1px solid rgba(234, 179, 8, 0.9);
-      color: #facc15;
-    }
-
-    .feedback.error {
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.9);
-      color: #fecaca;
-    }
-
-    .chip-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 6px;
-    }
-
-    .chip {
-      padding: 3px 9px;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      border: 1px solid rgba(148, 163, 184, 0.7);
-      background: rgba(15, 23, 42, 0.95);
-      color: #e5e7eb;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .chip.active {
-      background: rgba(59, 130, 246, 0.2);
-      border-color: rgba(59, 130, 246, 0.9);
-      color: #dbeafe;
-    }
-
-    .top-bar {
-      display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
       gap: 10px;
+    }
+
+    #timer {
+      font-size: 18px;
+      font-weight: 600;
+      color: #ffdd57;
+    }
+
+    #score {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    #target-score-label {
+      margin-top: 4px;
+    }
+
+    #zone-filter-bar {
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 10px 12px;
+      font-size: 14px;
+      margin-bottom: 16px;
+      background: radial-gradient(circle at top left, rgba(0, 194, 255, 0.12), rgba(5, 8, 20, 0.9));
+    }
+
+    #zone-filter-bar label {
+      margin-right: 10px;
+      font-size: 13px;
+    }
+
+    #zone-filter-bar input[type="checkbox"] {
+      margin-left: 4px;
+    }
+
+    #wheel-section {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    #wheel-container {
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      border: 4px solid rgba(0, 194, 255, 0.6);
+      background: radial-gradient(circle at center, #1b2238, #050814);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #pointer {
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-bottom: 18px solid #ffdd57;
+      position: absolute;
+      top: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+    }
+
+    #wheel {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 3px dashed rgba(255, 255, 255, 0.45);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 2s ease-out;
+    }
+
+    #wheel-labels span {
+      position: absolute;
+      font-size: 13px;
+      color: #fff;
+      text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+      font-weight: 600;
+    }
+
+    #label-zone-1 { top: 8px; left: 50%; transform: translateX(-50%); }
+    #label-zone-3 { right: 4px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+    #label-zone-4 { bottom: 8px; left: 50%; transform: translateX(-50%) rotate(180deg); }
+    #label-zone-5 { left: 4px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+
+    #wheel-message {
+      font-size: 13px;
+      color: #b6c5dd;
+      margin-top: 8px;
+      max-width: 260px;
+    }
+
+    #question-box {
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 10px 14px 12px;
+      background: radial-gradient(circle at top left, rgba(0, 194, 255, 0.16), rgba(5, 8, 20, 0.9));
+      margin-bottom: 10px;
+    }
+
+    #question-number {
+      font-size: 14px;
+      margin-bottom: 4px;
+      color: #c9e4ff;
+    }
+
+    #question-code {
+      font-size: 13px;
+      color: #ffdd57;
       margin-bottom: 4px;
     }
 
-    .top-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
+    #zone-label {
+      font-size: 13px;
+      color: #8bd5ff;
+      margin-bottom: 4px;
     }
 
-    .back-link {
-      text-decoration: none;
+    #concept-name {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 4px;
     }
 
     .note {
-      margin-top: 6px;
-      font-size: 0.75rem;
-      color: #9ca3af;
+      font-size: 13px;
+      color: #a0b3c6;
     }
 
-    .small-label {
-      font-size: 0.8rem;
-      color: #9ca3af;
-      margin-top: 10px;
-      margin-bottom: 4px;
+    .score-controls,
+    .nav-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
     }
 
-    .shortcut-row {
-      margin-top: 6px;
-      font-size: 0.8rem;
-      color: #9ca3af;
+    .score-controls .btn,
+    .nav-controls .btn {
+      flex: 1 1 180px;
     }
 
-    .shortcut-row code {
-      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      background: rgba(15, 23, 42, 0.9);
-      padding: 3px 6px;
-      border-radius: 8px;
-      font-size: 0.75rem;
-    }
-
-    .prompt-box {
+    #game-result {
       margin-top: 8px;
-      padding: 6px 8px;
-      border-radius: 10px;
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px dashed rgba(148, 163, 184, 0.7);
-      font-size: 0.75rem;
-      color: #cbd5f5;
+      font-size: 14px;
+      min-height: 18px;
     }
 
-    .prompt-box code {
-      margin-top: 4px;
-      display: block;
-      white-space: pre;
-      direction: ltr;
+    #game-result.win {
+      color: #8cff9b;
+    }
+
+    #game-result.lose {
+      color: #ff8b8b;
+    }
+
+    /* מצב לימוד */
+    .study-filters {
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      background: rgba(5, 10, 25, 0.9);
+    }
+
+    .filter-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      gap: 6px;
+      font-size: 14px;
+    }
+
+    .filter-row label {
+      min-width: 50px;
+    }
+
+    .filter-row select,
+    .filter-row input {
+      flex: 1;
+      padding: 4px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(3, 8, 22, 0.9);
+      color: #f5f5f5;
+      font-size: 13px;
+    }
+
+    #study-box {
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 16px 14px;
+      background: radial-gradient(circle at top left, rgba(151, 71, 255, 0.18), rgba(5, 8, 20, 0.96));
+      margin-bottom: 10px;
+    }
+
+    #study-counter {
+      font-size: 13px;
+      color: #ffdd57;
+      margin-bottom: 6px;
+    }
+
+    #study-concept-name {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    #study-definition {
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    /* פופאפ הסבר */
+    #popup-overlay,
+    #win-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .popup-card {
+      background: rgba(10, 14, 30, 0.98);
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+      max-width: 450px;
+      width: 90%;
+      border: 1px solid rgba(0, 194, 255, 0.4);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
+    }
+
+    .popup-title {
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+
+    .popup-definition {
+      font-size: 14px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+      direction: rtl;
+    }
+
+    .popup-buttons {
+      margin-top: 12px;
       text-align: left;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* בחירת תצוגה */
+    .layout-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.82);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .layout-card {
+      background: rgba(10, 14, 30, 0.98);
+      border-radius: 18px;
+      padding: 20px 22px 18px;
+      max-width: 420px;
+      width: 92%;
+      border: 1px solid rgba(0, 194, 255, 0.5);
+      text-align: center;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.85);
+    }
+
+    .layout-card h2 {
+      margin-bottom: 8px;
+    }
+
+    .layout-card p {
+      font-size: 14px;
+      color: #bdcbe3;
+      margin-bottom: 12px;
+    }
+
+    .layout-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 6px;
+      flex-wrap: wrap;
+    }
+
+    .layout-small-note {
+      font-size: 12px;
+      color: #9fb3d5;
+    }
+
+    #layout-toggle-bar {
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    #layout-toggle-bar .btn {
+      width: 100%;
+      max-width: 260px;
+    }
+
+    /* איך המשחק עובד */
+    #how-it-works-box,
+    #credits-box {
+      margin-top: 10px;
+      padding: 12px 14px;
+      background: rgba(5, 12, 30, 0.98);
+      border-radius: 16px;
+      border: 1px solid rgba(0, 194, 255, 0.36);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    #how-it-works-box pre {
+      margin-top: 8px;
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.42);
       overflow-x: auto;
+      font-size: 11px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+      direction: rtl;
+    }
+
+    #credits-box p {
+      margin: 4px 0;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 8px;
+      }
+
+      .app {
+        padding: 16px 12px 18px;
+        border-radius: 18px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+
+      .subtitle {
+        font-size: 13px;
+        margin-bottom: 12px;
+      }
+
+      .home-buttons {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .home-buttons .btn {
+        width: 100%;
+        text-align: center;
+      }
+
+      #game-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      #wheel-container {
+        width: 150px;
+        height: 150px;
+      }
+
+      .score-controls .btn,
+      .nav-controls .btn {
+        width: 100%;
+      }
+
+      #study-box {
+        padding: 14px 12px;
+        border-radius: 16px;
+      }
+
+      #btn-study-next,
+      #btn-study-random {
+        width: 100%;
+      }
     }
   </style>
 </head>
+
 <body>
-  <div class="app">
-    <div class="content">
-      <!-- צד שמאל - גלגל, זירה, סטטוס -->
-      <section class="section">
-        <div class="top-bar">
-          <div class="top-left">
-            <a href="index.html" class="back-link">
-              <button class="btn ghost small" type="button">⬅ מסך הבית</button>
-            </a>
-            <div class="pill">
-              מצב לימוד  
-              <span id="modeLabel">קודים לזכירה</span>
-            </div>
-          </div>
-          <span class="badge">זירות 1,2,3,4,5,9</span>
-        </div>
 
-        <div class="row" style="margin-top: 10px;">
-          <label for="zoneSelect" style="font-size: 0.85rem; color: #d1d5db;">בחירת זירה למשחק</label>
-          <select id="zoneSelect">
-            <option value="all">כל הזירות יחד</option>
-            <option value="1">זירה 1 - יסודות תקשורת</option>
-            <option value="2">זירה 2 - גלובליזציה</option>
-            <option value="3">זירה 3 - הצגת המציאות</option>
-            <option value="4">זירה 4 - הומור וסאטירה</option>
-            <option value="5">זירה 5 - תרבות דיגיטלית</option>
-            <option value="9">זירה 9 - פרסום וצרכנות</option>
-          </select>
-        </div>
-
-        <div class="row">
-          <button class="btn" type="button" id="spinButton">
-            🎯 סיבוב גלגל והגרלת קוד
-          </button>
-          <button class="btn secondary" type="button" id="skipButton">
-            דלג על מושג
-          </button>
-        </div>
-
-        <div class="stats-row">
-          <div class="stat-card">
-            <div class="stat-label">קוד נוכחי</div>
-            <div class="stat-value" id="currentCodeLabel">-</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">זירה נוכחית</div>
-            <div class="stat-value" id="currentZoneLabel">-</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">שאלות שנענו</div>
-            <div class="stat-value" id="questionsCount">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">MASTERED</div>
-            <div class="stat-value" id="masteredCount">0</div>
-          </div>
-        </div>
-
-        <div class="concept-display" id="conceptBox">
-          <div class="concept-code" id="conceptCode">לחץ על "סיבוב גלגל"</div>
-          <div class="concept-meta" id="conceptMeta">
-            המערכת תגריל קוד מתוך הזירה שנבחרה ותציג כאן.
-          </div>
-        </div>
-
-        <div class="small-label">אפשרות סימון מהיר אחרי שבדקת בצאט</div>
-        <div class="chip-row">
-          <button class="chip" type="button" data-result="correct" id="markCorrect">
-            ✅ נכון לגמרי
-          </button>
-          <button class="chip" type="button" data-result="partial" id="markPartial">
-            ⚠ נכון חלקית
-          </button>
-          <button class="chip" type="button" data-result="wrong" id="markWrong">
-            ❌ טעות
-          </button>
-        </div>
-
-        <p class="note">
-          הכפתורים האלה רק מעדכנים נקודות וסטטוס MASTERED.  
-          את הניסוח עצמו אתה בודק בצאט לפי הפורמט למטה.
-        </p>
-      </section>
-
-      <!-- צד ימין - תשובה, משוב, צאט פורמט -->
-      <section class="section">
-        <h2 class="section-title">
-          ניסוח המושג במילים שלך
-          <span class="badge">מתאים לצאט</span>
-        </h2>
-
-        <div class="small-label">כתוב כאן את התיאור שלך למושג</div>
-        <textarea
-          id="answerInput"
-          placeholder="לדוגמה: תהליך שבו אדם לומד ומפנים את הנורמות, הערכים וההתנהגות של החברה שבה הוא חי..."
-        ></textarea>
-
-        <div class="row" style="margin-top: 8px;">
-          <button class="btn" type="button" id="submitAnswer">
-            שמור ניסוח למושג הזה
-          </button>
-          <button class="btn secondary" type="button" id="clearAnswer">
-            נקה שדה תשובה
-          </button>
-        </div>
-
-        <div class="feedback" id="feedbackBox"></div>
-
-        <div class="shortcut-row">
-          כדי לבדוק מול הצאט השתמש בפורמט
-          <code>קוד - תיאור</code>
-          לדוגמה:
-        </div>
-
-        <div class="prompt-box">
-          <div>המערכת כבר מכירה את הקודים שלך. אתה שולח רק את השורה הזאת:</div>
-          <code id="chatPromptExample">
-107 - מה שהמוען מנסה להעביר לנמען
-          </code>
-          <div style="margin-top: 4px;">
-            הצאט מחזיר אחד משלושה:
-            נכון - 5 נקודות +  
-            נכון חלקית - 3 נקודות + עם הסבר  
-            טעות - -10 נקודות עם הסבר  
-            אחרי התשובה של הצאט אתה מסמן כאן בצד ימין באחד הכפתורים.
-          </div>
-        </div>
-
-        <div class="small-label" style="margin-top: 10px;">ניהול נקודות וסטטוס משחק</div>
-        <div class="row">
-          <button class="btn ghost small" type="button" id="resetCurrent">
-            איפוס מושג נוכחי
-          </button>
-          <button class="btn ghost small" type="button" id="resetAll">
-            איפוס כל הנתונים במכשיר
-          </button>
-        </div>
-
-        <p class="note">
-          כל הנקודות, מספר השאלות ונתוני MASTERED נשמרים מקומית ב localStorage במכשיר ובדפדפן הנוכחי בלבד.
-        </p>
-      </section>
+  <!-- בחירת מצב תצוגה -->
+  <div id="layout-chooser" class="layout-overlay">
+    <div class="layout-card">
+      <h2>עם איזה תצוגה לעבוד?</h2>
+      <p>בחר אם לעבוד בתצוגת מחשב או נייד. אפשר להחליף אחר כך בתחתית.</p>
+      <div class="layout-buttons">
+        <button id="btn-layout-desktop" class="btn">💻 תצוגת מחשב</button>
+        <button id="btn-layout-mobile" class="btn secondary">📱 תצוגת נייד</button>
+      </div>
+      <div class="layout-small-note">
+        הבחירה נשמרת בדפדפן שלך.
+      </div>
     </div>
   </div>
 
-  <!-- קבצי הנתונים והמשחק -->
+  <div class="app">
+
+    <!-- מסך בית -->
+    <div id="home-screen">
+      <h1>משחק מושגים – ניו מדיה</h1>
+      <div class="subtitle">
+        גלגל מושגים • 3 שאלות בכל סיבוב • היעד מחושב אוטומטית לפי כמות המושגים
+      </div>
+
+      <div class="center">
+        <!-- כאן הוספתי את זירה 2 -->
+        <div class="tag">זירות במשחק: 1, 2, 3, 4, 5 (אפשר גם 9)</div><br />
+        <div class="tag">מצב לימוד כולל גם זירה 9 – פרסום</div>
+      </div>
+
+      <div class="home-buttons">
+        <button id="btn-start-game" class="btn">🎮 התחל משחק</button>
+        <button id="btn-study-mode" class="btn secondary">📚 מצב לימוד</button>
+        <button id="btn-how-it-works" class="btn secondary">ℹ️ איך המשחק עובד?</button>
+        <button id="btn-credits" class="btn secondary">©️ קרדיטים</button>
+      </div>
+
+      <div id="how-it-works-box" class="hidden">
+        <h3>איך המשחק עובד?</h3>
+        <p>
+          1. אתה לוחץ <b>"התחל משחק"</b> → סובב גלגל → נבחרת זירה (1 / 2 / 3 / 4 / 5 / 9).<br>
+          2. מהזירה הזאת מוצגות לך 3 שאלות (מושגים) – לכל שאלה יש <b>קוד</b> קבוע.<br>
+          3. את התשובה אתה כותב כאן בצ׳אט איתי, בפורמט:
+        </p>
+
+        <p><code>קוד – תיאור</code> (לדוגמה: <code>129 – בידור – תוכן שנועד לשעשוע</code>)</p>
+
+        <p>
+          אני משווה את מה שכתבת להגדרה הרשמית של הקוד, ונותן לך אחד משלושת המצבים:
+        </p>
+
+        <ul style="margin-top:4px; margin-bottom:10px; padding-left:18px;">
+          <li>✅ <b>נכון</b> – אני כותב: <b>5 נקודות +</b></li>
+          <li>⚖️ <b>נכון חלקית</b> – אני כותב: <b>3 נקודות +</b> + מסביר מה חסר / לא מדויק</li>
+          <li>❌ <b>טעות</b> – אני כותב: <b>10- נקודות</b> + מסביר מה לא נכון</li>
+        </ul>
+
+        <p>
+          אני <b>לא מנהל את הניקוד בפועל</b> – אתה מנהל את הניקוד במשחק באתר, אבל אני תמיד אכתוב ליד התשובה את
+          סוג הציון (נכון / חלקי / טעות) + כמה נקודות זה שווה.
+        </p>
+
+        <p>להלן הפרומט שאתה שולח ל-ChatGPT שלך:</p>
+
+        <pre id="how-it-works-pre">
+זירה 1 (101–131)
+
+101 – תקשורת – קשר בין אנשים להעברת מידע
+102 – סוגי תקשורת – כתובה/מדוברת/חזותית
+103 – תקשורת כתובה – מסרים בטקסט
+...
+        </pre>
+      </div>
+
+      <div id="credits-box" class="hidden">
+        <h3>קרדיטים ©️</h3>
+        <p>המשחק נבנה ועוצב על־ידי <b>תומר מודן</b>.</p>
+        <p>המשחק יוצר ונכתב בסיוע <b>ChatGPT</b>.</p>
+        <p>מצאת טעות או בעיה בהגדרה? תכתוב לתומר והוא יעדכן את המשחק.</p>
+      </div>
+    </div>
+
+    <!-- מסך משחק -->
+    <div id="game-screen" class="hidden">
+
+      <div id="game-header">
+        <div>
+          <div id="timer">⏱️ 05:00</div>
+        </div>
+        <div>
+          <div id="score">⭐ ניקוד: 0</div>
+          <div id="target-score-label" class="tag">מטרה: 50 נקודות</div>
+        </div>
+      </div>
+
+      <div id="zone-filter-bar">
+        <div class="section-title" style="margin-top:0;">זירות למשחק:</div>
+        <div>
+          <label><input type="checkbox" class="zone-filter" value="1" checked> זירה 1</label>
+          <!-- כאן הוספתי את זירה 2 -->
+          <label><input type="checkbox" class="zone-filter" value="2" checked> זירה 2</label>
+          <label><input type="checkbox" class="zone-filter" value="3" checked> זירה 3</label>
+          <label><input type="checkbox" class="zone-filter" value="4" checked> זירה 4</label>
+          <label><input type="checkbox" class="zone-filter" value="5" checked> זירה 5</label>
+          <label><input type="checkbox" class="zone-filter" value="9"> זירה 9 – פרסום</label>
+        </div>
+        <div style="margin-top:10px;">
+          <button id="btn-zones-all" class="btn secondary small-btn">כל הזירות</button>
+          <button id="btn-zones-clear" class="btn secondary small-btn">אפס בחירה</button>
+        </div>
+      </div>
+
+      <div id="wheel-section">
+        <div id="wheel-container">
+          <div id="pointer"></div>
+          <div id="wheel">
+            <div id="wheel-labels">
+              <span id="label-zone-1">זירה 1</span>
+              <span id="label-zone-3">זירה 3</span>
+              <span id="label-zone-4">זירה 4</span>
+              <span id="label-zone-5">זירה 5</span>
+            </div>
+          </div>
+        </div>
+        <div>
+          <button id="btn-spin" class="btn">🎯 סובב גלגל</button>
+          <div id="wheel-message">
+            סובב את הגלגל כדי לבחור זירה. אחרי העצירה יופיעו 3 מושגים מהזירה הזו והטיימר יתחיל לבד.
+          </div>
+        </div>
+      </div>
+
+      <div id="question-box">
+        <div id="question-number">עדיין אין שאלה – סובב את הגלגל</div>
+        <div id="question-code"></div>
+        <div id="zone-label">זירה: -</div>
+        <div id="concept-name">המתן לבחירת הזירה</div>
+        <div class="note">
+          את התשובה כותבים בצ׳אט איתי 😉  
+          תכתוב גם את <b>קוד השאלה</b> שמופיע כאן באתר.
+        </div>
+      </div>
+
+      <div class="section-title">ניקוד לשאלה הזאת:</div>
+      <div class="score-controls">
+        <button id="btn-correct" class="btn score-btn" disabled>✅ נכון (+5)</button>
+        <button id="btn-partial" class="btn secondary score-btn" disabled>⚖️ חלקי (+3)</button>
+        <button id="btn-wrong" class="btn danger score-btn" disabled>❌ טעות (-10 + הסבר)</button>
+        <button id="btn-timeover" class="btn danger score-btn" disabled>⏰ נגמר הזמן (-20 + הסבר)</button>
+      </div>
+
+      <div class="section-title">ניווט:</div>
+      <div class="nav-controls">
+        <button id="btn-reset-score" class="btn secondary">🔄 איפוס ניקוד</button>
+        <button id="btn-back-home-from-game" class="btn secondary">🏠 חזרה למסך הבית</button>
+      </div>
+
+      <div id="game-result"></div>
+    </div>
+
+    <!-- מסך מצב לימוד -->
+    <div id="study-screen" class="hidden">
+      <h2>מצב לימוד – כל המושגים</h2>
+      <div class="subtitle">
+        רואה מושג + הגדרה מלאה • לוחץ "הבנתי" למושג הבא  
+        אפשר לסנן לפי זירה / רק מושגים שטעית בהם / חיפוש לפי שם.
+      </div>
+
+      <div class="study-filters">
+        <div class="filter-row">
+          <label for="study-source-filter">מקור:</label>
+          <select id="study-source-filter">
+            <option value="all">כל המושגים</option>
+            <option value="mistakes">מושגים שטעיתי בהם</option>
+          </select>
+        </div>
+        <div class="filter-row">
+          <label for="study-zone-filter">זירה:</label>
+          <select id="study-zone-filter">
+            <option value="all">כל הזירות</option>
+            <option value="1">זירה 1</option>
+            <!-- כאן הוספתי את זירה 2 -->
+            <option value="2">זירה 2</option>
+            <option value="3">זירה 3</option>
+            <option value="4">זירה 4</option>
+            <option value="5">זירה 5</option>
+            <option value="9">זירה 9 – פרסום</option>
+          </select>
+        </div>
+        <div class="filter-row">
+          <label for="study-search">חיפוש:</label>
+          <input id="study-search" type="text" placeholder="הקלד שם מושג." />
+        </div>
+        <div id="study-filters-actions">
+          <button id="btn-apply-study-filter" class="btn secondary small-btn">החל סינון</button>
+        </div>
+      </div>
+
+      <div id="study-box">
+        <div id="study-counter">מושג 1 מתוך ?</div>
+        <div id="study-concept-name">—</div>
+        <div id="study-definition">—</div>
+      </div>
+
+      <div class="nav-controls">
+        <button id="btn-study-next" class="btn">✅ הבנתי – הבא</button>
+        <button id="btn-study-random" class="btn secondary">🎲 מושג אקראי</button>
+        <button id="btn-back-home-from-study" class="btn secondary">🏠 חזרה למסך הבית</button>
+      </div>
+    </div>
+
+    <!-- פופאפ הסבר -->
+    <div id="popup-overlay">
+      <div class="popup-card">
+        <div class="popup-title" id="popup-concept-name">מושג</div>
+        <div class="popup-definition" id="popup-definition"></div>
+        <div class="popup-buttons">
+          <button id="btn-popup-ok" class="btn">הבנתי</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- פופאפ זכייה -->
+    <div id="win-overlay">
+      <div class="popup-card">
+        <div class="popup-title">כל הכבוד! 🎉</div>
+        <div class="popup-definition">
+          הגעת ליעד הניקוד שהוגדר לפי כמות המושגים.<br>
+          אפשר להמשיך לשחק עם אותו ניקוד, או לאפס ולהתחיל מחדש.
+        </div>
+        <div class="popup-buttons">
+          <button id="btn-win-continue" class="btn secondary">להמשיך</button>
+          <button id="btn-win-reset" class="btn">איפוס ניקוד</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="layout-toggle-bar">
+      <button id="btn-toggle-layout" class="btn secondary small-btn">🖥️ / 📱 החלף מצב תצוגה</button>
+    </div>
+
+  </div>
+
   <script src="data.js"></script>
+
+  <!-- סקריפט בחירת תצוגה + "איך המשחק עובד" + קרדיטים -->
+  <script>
+    window.addEventListener("DOMContentLoaded", function () {
+      const overlay = document.getElementById("layout-chooser");
+      const app = document.querySelector(".app");
+      const btnDesktop = document.getElementById("btn-layout-desktop");
+      const btnMobile = document.getElementById("btn-layout-mobile");
+      const btnToggle = document.getElementById("btn-toggle-layout");
+
+      const howBtn = document.getElementById("btn-how-it-works");
+      const howBox = document.getElementById("how-it-works-box");
+      const creditsBtn = document.getElementById("btn-credits");
+      const creditsBox = document.getElementById("credits-box");
+
+      function applyLayout(mode) {
+        app.classList.remove("force-desktop", "force-mobile");
+        if (mode === "desktop") app.classList.add("force-desktop");
+        if (mode === "mobile") app.classList.add("force-mobile");
+        localStorage.setItem("nm_layout_mode", mode);
+      }
+
+      let saved = localStorage.getItem("nm_layout_mode");
+      if (saved === "desktop" || saved === "mobile") {
+        applyLayout(saved);
+        overlay.style.display = "none";
+      }
+
+      btnDesktop.addEventListener("click", () => {
+        applyLayout("desktop");
+        overlay.style.display = "none";
+      });
+
+      btnMobile.addEventListener("click", () => {
+        applyLayout("mobile");
+        overlay.style.display = "none";
+      });
+
+      btnToggle.addEventListener("click", () => {
+        const isDesktop = app.classList.contains("force-desktop");
+        applyLayout(isDesktop ? "mobile" : "desktop");
+      });
+
+      function hideAllInfoBoxes() {
+        if (howBox) howBox.classList.add("hidden");
+        if (creditsBox) creditsBox.classList.add("hidden");
+      }
+
+      if (howBtn && howBox) {
+        howBtn.addEventListener("click", () => {
+          const willShow = howBox.classList.contains("hidden");
+          hideAllInfoBoxes();
+          if (willShow) howBox.classList.remove("hidden");
+        });
+      }
+
+      if (creditsBtn && creditsBox) {
+        creditsBtn.addEventListener("click", () => {
+          const willShow = creditsBox.classList.contains("hidden");
+          hideAllInfoBoxes();
+          if (willShow) creditsBox.classList.remove("hidden");
+        });
+      }
+    });
+  </script>
+
   <script src="game.js"></script>
 </body>
 </html>
