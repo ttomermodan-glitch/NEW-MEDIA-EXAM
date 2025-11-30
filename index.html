@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>משחק מושגים – ניו מדיה</title>
+  <title>משחק מושגים - גלגל הזירות</title>
 
   <style>
     * {
@@ -20,1010 +20,487 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 16px;
     }
 
     .app {
       width: 100%;
-      max-width: 900px;
-      background: rgba(10, 12, 20, 0.96);
+      max-width: 980px;
+      background: rgba(5, 8, 20, 0.95);
       border-radius: 24px;
-      padding: 24px 28px 30px;
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
-      border: 1px solid rgba(0, 194, 255, 0.35);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+      padding: 18px 18px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 60%),
+        radial-gradient(circle at bottom right, rgba(147, 51, 234, 0.2), transparent 55%);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .content {
       position: relative;
       z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+      gap: 16px;
     }
 
-    /* מצבי תצוגה */
-    .app.force-desktop {
-      max-width: 1100px;
+    @media (max-width: 820px) {
+      .content {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
 
-    .app.force-mobile {
-      max-width: 480px;
+    .section {
+      background: rgba(15, 23, 42, 0.92);
+      border-radius: 18px;
+      padding: 14px 14px 16px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      position: relative;
+      overflow: hidden;
     }
 
-    .app.force-desktop #wheel-container {
-      width: 220px;
-      height: 220px;
+    .section-title {
+      margin: 0 0 6px;
+      font-size: 1.05rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
 
-    .app.force-mobile #wheel-container {
-      width: 150px;
-      height: 150px;
+    .badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      background: rgba(37, 99, 235, 0.2);
+      border: 1px solid rgba(59, 130, 246, 0.6);
+      color: #bfdbfe;
+      white-space: nowrap;
     }
 
-    h1, h2, h3 {
-      margin: 0 0 10px;
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+      flex-wrap: wrap;
     }
 
-    h1 {
-      font-size: 30px;
-      letter-spacing: 1px;
-      text-align: center;
+    select,
+    textarea,
+    input[type="text"] {
+      width: 100%;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      outline: none;
     }
 
-    .subtitle {
-      text-align: center;
-      font-size: 14px;
-      color: #a0b3c6;
-      margin-bottom: 22px;
+    select:focus,
+    textarea:focus,
+    input[type="text"]:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.4);
     }
 
-    .hidden {
-      display: none;
-    }
-
-    .center {
-      text-align: center;
+    textarea {
+      border-radius: 12px;
+      resize: vertical;
+      min-height: 90px;
+      max-height: 200px;
+      line-height: 1.4;
     }
 
     .btn {
       border: none;
       border-radius: 999px;
-      padding: 10px 22px;
-      font-size: 16px;
+      padding: 9px 14px;
+      font-size: 0.9rem;
       cursor: pointer;
-      margin: 6px;
-      background: linear-gradient(135deg, #00c2ff, #0070ff);
-      color: #fff;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
       font-weight: 600;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
-      box-shadow: 0 8px 20px rgba(0, 194, 255, 0.4);
-      touch-action: manipulation;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn.small {
+      padding: 6px 10px;
+      font-size: 0.8rem;
+    }
+
+    .btn.secondary {
+      background: rgba(148, 163, 184, 0.12);
+      color: #e5e7eb;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      font-weight: 500;
+    }
+
+    .btn.ghost {
+      background: transparent;
+      border: 1px dashed rgba(148, 163, 184, 0.5);
+      color: #9ca3af;
+      font-weight: 400;
     }
 
     .btn:hover {
       transform: translateY(-1px);
-      box-shadow: 0 10px 24px rgba(0, 194, 255, 0.6);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.7);
+      opacity: 0.96;
     }
 
-    .btn.secondary {
-      background: rgba(255, 255, 255, 0.04);
+    .btn:active {
+      transform: none;
       box-shadow: none;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      opacity: 0.9;
     }
 
-    .btn.secondary:hover {
-      background: rgba(255, 255, 255, 0.08);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-    }
-
-    .btn.danger {
-      background: linear-gradient(135deg, #ff3b3b, #b70000);
-      box-shadow: 0 8px 20px rgba(255, 59, 59, 0.4);
-    }
-
-    .btn.small-btn {
-      padding: 6px 14px;
-      font-size: 13px;
-      margin: 4px;
-    }
-
-    .home-buttons {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-top: 10px;
-      margin-bottom: 10px;
-    }
-
-    .tag {
-      display: inline-block;
+    .pill {
       padding: 4px 10px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      font-size: 12px;
-      color: #d3e4ff;
-    }
-
-    .section-title {
-      margin-top: 18px;
-      margin-bottom: 6px;
-      font-size: 15px;
-      color: #d3e4ff;
-      font-weight: 600;
-    }
-
-    #game-header {
-      display: flex;
-      justify-content: space-between;
+      font-size: 0.8rem;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      color: #e5e7eb;
+      display: inline-flex;
       align-items: center;
-      margin-bottom: 12px;
-      gap: 10px;
+      gap: 6px;
+      white-space: nowrap;
     }
 
-    #timer {
-      font-size: 18px;
-      font-weight: 600;
-      color: #ffdd57;
-    }
-
-    #score {
-      font-size: 18px;
+    .pill strong {
       font-weight: 600;
     }
 
-    #target-score-label {
-      margin-top: 4px;
+    .stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
     }
 
-    #zone-filter-bar {
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
+    .stat-card {
+      flex: 1;
+      min-width: 130px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      font-size: 0.8rem;
+    }
+
+    .stat-label {
+      color: #9ca3af;
+      margin-bottom: 2px;
+    }
+
+    .stat-value {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .concept-display {
+      margin-top: 12px;
       padding: 10px 12px;
-      font-size: 14px;
-      margin-bottom: 16px;
-      background: radial-gradient(circle at top left, rgba(0, 194, 255, 0.12), rgba(5, 8, 20, 0.9));
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      font-size: 0.92rem;
     }
 
-    #zone-filter-bar label {
-      margin-right: 10px;
-      font-size: 13px;
+    .concept-code {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
     }
 
-    #zone-filter-bar input[type="checkbox"] {
-      margin-left: 4px;
+    .concept-meta {
+      margin-top: 4px;
+      font-size: 0.8rem;
+      color: #9ca3af;
     }
 
-    #wheel-section {
+    .feedback {
+      margin-top: 8px;
+      font-size: 0.85rem;
+      border-radius: 12px;
+      padding: 8px 10px;
+      line-height: 1.4;
+      display: none;
+    }
+
+    .feedback.ok {
+      background: rgba(22, 163, 74, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.8);
+      color: #bbf7d0;
+    }
+
+    .feedback.partial {
+      background: rgba(234, 179, 8, 0.09);
+      border: 1px solid rgba(234, 179, 8, 0.9);
+      color: #facc15;
+    }
+
+    .feedback.error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.9);
+      color: #fecaca;
+    }
+
+    .chip-row {
       display: flex;
-      gap: 20px;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .chip {
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.95);
+      color: #e5e7eb;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .chip.active {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.9);
+      color: #dbeafe;
+    }
+
+    .top-bar {
+      display: flex;
       align-items: center;
-      margin-bottom: 18px;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .top-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
-    #wheel-container {
-      width: 190px;
-      height: 190px;
-      border-radius: 50%;
-      border: 4px solid rgba(0, 194, 255, 0.6);
-      background: radial-gradient(circle at center, #1b2238, #050814);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    #pointer {
-      width: 0;
-      height: 0;
-      border-left: 12px solid transparent;
-      border-right: 12px solid transparent;
-      border-bottom: 18px solid #ffdd57;
-      position: absolute;
-      top: -1px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 3;
-    }
-
-    #wheel {
-      width: 150px;
-      height: 150px;
-      border-radius: 50%;
-      border: 3px dashed rgba(255, 255, 255, 0.45);
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 2s ease-out;
-    }
-
-    #wheel-labels span {
-      position: absolute;
-      font-size: 13px;
-      color: #fff;
-      text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
-      font-weight: 600;
-    }
-
-    #label-zone-1 { top: 8px; left: 50%; transform: translateX(-50%); }
-    #label-zone-3 { right: 4px; top: 50%; transform: translateY(-50%) rotate(90deg); }
-    #label-zone-4 { bottom: 8px; left: 50%; transform: translateX(-50%) rotate(180deg); }
-    #label-zone-5 { left: 4px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
-
-    #wheel-message {
-      font-size: 13px;
-      color: #b6c5dd;
-      margin-top: 8px;
-      max-width: 260px;
-    }
-
-    #question-box {
-      border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      padding: 10px 14px 12px;
-      background: radial-gradient(circle at top left, rgba(0, 194, 255, 0.16), rgba(5, 8, 20, 0.9));
-      margin-bottom: 10px;
-    }
-
-    #question-number {
-      font-size: 14px;
-      margin-bottom: 4px;
-      color: #c9e4ff;
-    }
-
-    #question-code {
-      font-size: 13px;
-      color: #ffdd57;
-      margin-bottom: 4px;
-    }
-
-    #zone-label {
-      font-size: 13px;
-      color: #8bd5ff;
-      margin-bottom: 4px;
-    }
-
-    #concept-name {
-      font-size: 17px;
-      font-weight: 600;
-      margin-bottom: 4px;
+    .back-link {
+      text-decoration: none;
     }
 
     .note {
-      font-size: 13px;
-      color: #a0b3c6;
+      margin-top: 6px;
+      font-size: 0.75rem;
+      color: #9ca3af;
     }
 
-    .score-controls,
-    .nav-controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    .score-controls .btn,
-    .nav-controls .btn {
-      flex: 1 1 180px;
-    }
-
-    #game-result {
-      margin-top: 8px;
-      font-size: 14px;
-      min-height: 18px;
-    }
-
-    #game-result.win {
-      color: #8cff9b;
-    }
-
-    #game-result.lose {
-      color: #ff8b8b;
-    }
-
-    /* מצב לימוד */
-    .study-filters {
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      padding: 10px 14px;
-      margin-bottom: 12px;
-      background: rgba(5, 10, 25, 0.9);
-    }
-
-    .filter-row {
-      display: flex;
-      align-items: center;
-      margin-bottom: 6px;
-      gap: 6px;
-      font-size: 14px;
-    }
-
-    .filter-row label {
-      min-width: 50px;
-    }
-
-    .filter-row select,
-    .filter-row input {
-      flex: 1;
-      padding: 4px 8px;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      background: rgba(3, 8, 22, 0.9);
-      color: #f5f5f5;
-      font-size: 13px;
-    }
-
-    #study-box {
-      border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      padding: 16px 14px;
-      background: radial-gradient(circle at top left, rgba(151, 71, 255, 0.18), rgba(5, 8, 20, 0.96));
-      margin-bottom: 10px;
-    }
-
-    #study-counter {
-      font-size: 13px;
-      color: #ffdd57;
-      margin-bottom: 6px;
-    }
-
-    #study-concept-name {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-
-    #study-definition {
-      font-size: 14px;
-      line-height: 1.4;
-    }
-
-    /* פופאפ הסבר */
-    #popup-overlay,
-    #win-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.75);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-    }
-
-    .popup-card {
-      background: rgba(10, 14, 30, 0.98);
-      border-radius: 18px;
-      padding: 18px 18px 16px;
-      max-width: 450px;
-      width: 90%;
-      border: 1px solid rgba(0, 194, 255, 0.4);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
-    }
-
-    .popup-title {
-      font-size: 18px;
-      margin-bottom: 6px;
-    }
-
-    .popup-definition {
-      font-size: 14px;
-      white-space: pre-wrap;
-      line-height: 1.5;
-      direction: rtl;
-    }
-
-    .popup-buttons {
-      margin-top: 12px;
-      text-align: left;
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-
-    /* בחירת תצוגה */
-    .layout-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.82);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-
-    .layout-card {
-      background: rgba(10, 14, 30, 0.98);
-      border-radius: 18px;
-      padding: 20px 22px 18px;
-      max-width: 420px;
-      width: 92%;
-      border: 1px solid rgba(0, 194, 255, 0.5);
-      text-align: center;
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.85);
-    }
-
-    .layout-card h2 {
-      margin-bottom: 8px;
-    }
-
-    .layout-card p {
-      font-size: 14px;
-      color: #bdcbe3;
-      margin-bottom: 12px;
-    }
-
-    .layout-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-bottom: 6px;
-      flex-wrap: wrap;
-    }
-
-    .layout-small-note {
-      font-size: 12px;
-      color: #9fb3d5;
-    }
-
-    #layout-toggle-bar {
-      margin-top: 12px;
-      text-align: center;
-    }
-
-    #layout-toggle-bar .btn {
-      width: 100%;
-      max-width: 260px;
-    }
-
-    /* איך המשחק עובד */
-    #how-it-works-box,
-    #credits-box {
+    .small-label {
+      font-size: 0.8rem;
+      color: #9ca3af;
       margin-top: 10px;
-      padding: 12px 14px;
-      background: rgba(5, 12, 30, 0.98);
-      border-radius: 16px;
-      border: 1px solid rgba(0, 194, 255, 0.36);
-      font-size: 13px;
-      line-height: 1.5;
+      margin-bottom: 4px;
     }
 
-    #how-it-works-box pre {
+    .shortcut-row {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .shortcut-row code {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background: rgba(15, 23, 42, 0.9);
+      padding: 3px 6px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+    }
+
+    .prompt-box {
       margin-top: 8px;
-      padding: 10px;
-      border-radius: 12px;
-      background: rgba(0, 0, 0, 0.42);
+      padding: 6px 8px;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px dashed rgba(148, 163, 184, 0.7);
+      font-size: 0.75rem;
+      color: #cbd5f5;
+    }
+
+    .prompt-box code {
+      margin-top: 4px;
+      display: block;
+      white-space: pre;
+      direction: ltr;
+      text-align: left;
       overflow-x: auto;
-      font-size: 11px;
-      white-space: pre-wrap;
-      line-height: 1.5;
-      direction: rtl;
-    }
-
-    #credits-box p {
-      margin: 4px 0;
-    }
-
-    @media (max-width: 600px) {
-      body {
-        padding: 8px;
-      }
-
-      .app {
-        padding: 16px 12px 18px;
-        border-radius: 18px;
-      }
-
-      h1 {
-        font-size: 22px;
-      }
-
-      .subtitle {
-        font-size: 13px;
-        margin-bottom: 12px;
-      }
-
-      .home-buttons {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .home-buttons .btn {
-        width: 100%;
-        text-align: center;
-      }
-
-      #game-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      #wheel-container {
-        width: 150px;
-        height: 150px;
-      }
-
-      .score-controls .btn,
-      .nav-controls .btn {
-        width: 100%;
-      }
-
-      #study-box {
-        padding: 14px 12px;
-        border-radius: 16px;
-      }
-
-      #btn-study-next,
-      #btn-study-random {
-        width: 100%;
-      }
     }
   </style>
 </head>
-
 <body>
-
-  <!-- בחירת מצב תצוגה -->
-  <div id="layout-chooser" class="layout-overlay">
-    <div class="layout-card">
-      <h2>עם איזה תצוגה לעבוד?</h2>
-      <p>בחר אם לעבוד בתצוגת מחשב או נייד. אפשר להחליף אחר כך בתחתית.</p>
-      <div class="layout-buttons">
-        <button id="btn-layout-desktop" class="btn">💻 תצוגת מחשב</button>
-        <button id="btn-layout-mobile" class="btn secondary">📱 תצוגת נייד</button>
-      </div>
-      <div class="layout-small-note">
-        הבחירה נשמרת בדפדפן שלך.
-      </div>
-    </div>
-  </div>
-
   <div class="app">
-
-    <!-- מסך בית -->
-    <div id="home-screen">
-      <h1>משחק מושגים – ניו מדיה</h1>
-      <div class="subtitle">
-        גלגל מושגים • 3 שאלות בכל סיבוב • היעד מחושב אוטומטית לפי כמות המושגים
-      </div>
-
-      <div class="center">
-        <div class="tag">זירות במשחק:1 , 3 , 4 , 5 , 9</div><br />
-        <div class="tag">מצב לימוד</div>
-      </div>
-
-      <div class="home-buttons">
-        <button id="btn-start-game" class="btn">🎮 התחל משחק</button>
-        <button id="btn-study-mode" class="btn secondary">📚 מצב לימוד</button>
-        <button id="btn-how-it-works" class="btn secondary">ℹ️ איך המשחק עובד?</button>
-        <button id="btn-credits" class="btn secondary">©️ קרדיטים</button>
-      </div>
-
-      <div id="how-it-works-box" class="hidden">
-        <h3>איך המשחק עובד?</h3>
-        <p>
-          1. אתה לוחץ <b>"התחל משחק"</b> → סובב גלגל → נבחרת זירה (1 / 3 / 4 / 5 / 9).<br>
-          2. מהזירה הזאת מוצגות לך 3 שאלות (מושגים) – לכל שאלה יש <b>קוד</b> קבוע.<br>
-          3. את התשובה אתה כותב כאן בצ׳אט איתי, בפורמט:
-        </p>
-
-        <p><code>קוד – תיאור</code> (לדוגמה: <code>129 – בידור – תוכן שנועד לשעשוע</code>)</p>
-
-        <p>
-          אני משווה את מה שכתבת להגדרה הרשמית של הקוד, ונותן לך אחד משלושת המצבים:
-        </p>
-
-        <ul style="margin-top:4px; margin-bottom:10px; padding-left:18px;">
-          <li>✅ <b>נכון</b> – אני כותב: <b>5 נקודות +</b></li>
-          <li>⚖️ <b>נכון חלקית</b> – אני כותב: <b>3 נקודות +</b> + מסביר מה חסר / לא מדויק</li>
-          <li>❌ <b>טעות</b> – אני כותב: <b>10- נקודות</b> + מסביר מה לא נכון</li>
-        </ul>
-
-        <p>
-          אני <b>לא מנהל את הניקוד בפועל</b> – אתה מנהל את הניקוד במשחק באתר, אבל אני תמיד אכתוב ליד התשובה את
-          סוג הציון (נכון / חלקי / טעות) + כמה נקודות זה שווה.
-        </p>
-
-        <p>להלן הפרומט שאתה שולח ל-ChatGPT שלך:</p>
-
-        <pre id="how-it-works-pre">
- זירה 1 – תקשורת בסיס (101–131)
-
-101 – תקשורת – קשר בין בני אדם, שבו אדם אחד מעביר מידע, רגשות, מחשבות ותחושות לאדם אחר, פנים אל פנים או דרך אמצעי תקשורת.
-102 – סוגי תקשורת – שלושה סוגים עיקריים: תקשורת כתובה (טקסט), תקשורת מדוברת (דיבור), תקשורת חזותית (תמונות וסמלים).
-103 – תקשורת כתובה – מסרים שעוברים דרך טקסט: מכתבים, עיתונים, הודעות SMS, מיילים, פוסטים כתובים ועוד.
-104 – תקשורת מדוברת – מסרים שעוברים דרך דיבור וגלי קול: שיחה פנים מול פנים, טלפון, דיון ברדיו, הרצאה, שיעור.
-105 – תקשורת חזותית – מסרים המועברים באמצעות תמונות, סמלים, אייקונים, סרטונים, גרפים, מפות ואנימציות.
-106 – מוען – אדם או גורם (אדם בודד, גוף, ארגון) שמעביר מסר לנמען.
-107 – מסר – התוכן שעובר מהמוען לנמען: רעיון, מידע, דעה, רגש, סיפור, בקשה וכד'.
-108 – נמען / קולט – הנמען הוא מי שהמסר מיועד אליו; קולט הוא מי שמקבל את המסר גם אם לא כיוונו אליו (למשל מי ששומע שיחה באוטובוס).
-109 – ערוץ (מדיום) – האמצעי שבאמצעותו המסר עובר: שיחה, טלפון, טלוויזיה, רדיו, רשתות חברתיות, עיתון, שלט חוצות ועוד.
-110 – קוד – מערכת סימנים שדרכה המסר מועבר ומובן (מילים, צבעים, סימנים, תמונות). כדי להבין את המסר צריך לדעת לפענח את הקוד.
-111 – משוב – תגובה של הנמען למוען (מילולית, קולית, חזותית או כתובה), שמראה האם המסר נקלט ומה דעתו על המסר.
-112 – תקשורת בין־אישית – תקשורת ישירה בין שני אנשים או בקבוצה קטנה, ללא תיווך של כלי תקשורת המונים, תוך שימוש בחושים (שמיעה, ראייה, מגע) ושפת גוף.
-113 – תקשורת המונים – תקשורת הפונה לקהל רחב ואנונימי באמצעות אמצעי תקשורת גדולים (טלוויזיה, רדיו, עיתונות, אתרי חדשות, רשתות), לרוב דרך ארגוני תקשורת.
-114 – טשטוש גבולות – מצב שבו הגבול בין תקשורת בין־אישית לתקשורת המונים מיטשטש, למשל כשהקהל מגיב לכתבות, פוסטים ושידורים (טוקבקים, תגובות, לייב צ'אט) והקשר הופך אישי ואינטראקטיבי.
-115 – תקשורת סינכרונית – תקשורת מרחוק בזמן אמת, כשהתגובה מיידית: שיחת טלפון, שיחת וידאו, צ'אט לייב.
-116 – תקשורת א־סינכרונית – תקשורת מרחוק שבה כל צד עונה בזמן הנוח לו, לא בזמן אמת: וואטסאפ, אימייל, הודעות קוליות, SMS.
-117 – תקשורת מעגלית – מודל תקשורת דו־כיווני שבו המסר עובר מהמוען לנמען וחוזר אליו כמשוב; שני הצדדים גם משדרים וגם מגיבים (שילוב כיוונים ולא רק כיוון אחד).
-118 – מודלים ליניאריים – מודלים הרואים בתקשורת תהליך חד־כיווני: המסר זורם רק מהמוען לנמען, בלי התייחסות למשוב או לשיחה הדדית.
-119 – מודל לאסוול – מודל ליניארי המדגיש את השפעת התקשורת, ושואל: מי אומר? מה? למי? באיזה ערוץ? ובאיזו השפעה?
-120 – מודלים מעגליים – מודלים הרואים בתקשורת תהליך דו־כיווני, עם משוב והשפעה הדדית: כל משתתף גם משדר וגם מקבל מסר, ומשנה את דבריו לפי התגובה.
-121 – סאבטקסט – המסר הסמוי, הלא מפורש, שנרמז דרך טון, הומור, ציניות, הקשר ותת־מסר – ולעיתים הפוך מהמסר הגלוי.
-122 – רעש – כל גורם שמפריע להעברת המסר או להבנתו (טכנית, נפשית או תרבותית) וגורם לכך שהמסר לא ייקלט במלואו.
-123 – רעש פיזי – הפרעות חיצוניות וגשמיות: רעש רקע, תקלה טכנית, קליטה גרועה, הד לא ברור וכדומה.
-124 – רעש אישי – מצב רגשי/נפשי של הנמען (עייפות, חוסר ריכוז, מצב רוח, דאגה) שמפריע לו להקשיב או להבין את המסר.
-125 – רעש תרבותי – הבדלי שפה, ערכים, נורמות, דעות וסגנון בין מוען לנמען, שמובילים לפירוש שונה של אותו מסר.
-126 – תפקידי התקשורת – חמישה תפקידים מרכזיים של התקשורת בחברה: סיקור הסביבה, תיאום ופרשנות, בידור, המשכיות/חיברות, וגיוס/סולידריות.
-127 – סיקור הסביבה – תפקיד התקשורת להביא מידע על מה שקורה בארץ ובעולם, כדי שהחברה תזהה איומים והזדמנויות.
-128 – תיאום ופרשנות – תפקיד התקשורת לקשר בין ידיעות, להסביר, לנתח ולהוסיף פרשנות לאירועים – לעיתים גם לפי אינטרסים.
-129 – בידור – תפקיד התקשורת לספק תכנים מהנים (סדרות, תוכניות בידור, ריאליטי) כדי להעסיק, להסיח ולהפיג מתחים.
-130 – חיברות (המשכיות) – תפקיד התקשורת להעביר ערכים, נורמות וסמלים מדור לדור (טקסי זיכרון, תכני מורשת, חגים).
-131 – גיוס – תפקיד התקשורת לחזק סולידריות וערבות הדדית, במיוחד במצבי חירום, מלחמה, אסונות, מחאות ושביתות.
-זירה 3 – תקשורת, חברה והצגת המציאות (301–339)
-
-301 – הצגת המציאות – בניית מציאות תקשורתית
-302 – משולש סדר היום – אזרחים/תקשורת/פוליטיקאים
-303 – ספין – הסחת דעת
-304 – אסכולת סדר היום – תקשורת קובעת על מה חושבים
-305 – תקשורת ברשתות – מידע חלקי/פייק
-306 – מסגור – איך מציגים אירוע
-307 – ערך חדשותי – למה זה חדשות
-308 – חדשות קשות – פוליטיקה/ביטחון
-309 – חדשות רכות – סיפורי אנוש
-310 – תקשורת ציבורית/מסחרית – מיסים מול פרסומות
-311 – תקשורת מגויסת – לטובת שלטון
-312 – הרשות הרביעית – כלב השמירה
-313 – אחריות חברתית – ריסון עצמי בחירום
-314 – הון–שלטון–עיתון – קשרים בעייתיים
-315 – נורמות מקצועיות – דיוק/איזון/אובייקטיביות
-316 – חמשת המ"מים – מה/מי/מתי/מדוע/איפה
-317 – אמצעי התקשורת כמתווכים – מעבירים מידע בין גורמים
-318 – חופש הביטוי – זכות להביע דעה
-319 – חופש המידע – זכות לקבל מידע
-320 – חופש העיתונות – עיתונות ללא צנזורה
-321 – צנזורה צבאית – מניעת מידע מסוכן
-322 – הוצאת דיבה – פגיעה בשם טוב
-323 – הגנות דיבה – תום לב / אמת + עניין ציבורי
-324 – כלב השמירה של הדמוקרטיה – חשיפת שחיתויות
-325 – אתיקה מקצועית – כללי מוסר לעיתונות
-326 – פלורליזם – ריבוי דעות
-327 – עיתונות מגזרית – מותאמת לקבוצות
-328 – תיאוריית הבניית המציאות – תקשורת מעצבת מציאות
-329 – תרבות הביטול – נידוי אדם בגלל אמירה
-330 – סוגי עיתונאים – שומר סף/חוקר/פרקליט/עצמאי
-331 – דנוטציה וקונוטציה – תיאור בתמונה ומשמעות
-332 – צילום דוקומנטרי – תיעודי
-333 – צילום מגזין – מבוים ואסתטי
-334 – צילום אייקוני וקומפוזיציה – סמל של אירוע + סידור פרטים
-335 – דילמות אתיות – לצלם או לעזור
-336 – הגנת קטינים – אסור לפרסם בלי אישור
-337 – צילום הלם – תמונות קשות/עייפות חמלה
-338 – פרסום תצלומי ידוענים – פרטיות מול זכות לדעת
-339 – איסורים מוחלטים – 5 כללים שאסור להפר
-
-          
- זירה 4 – הומור וסאטירה (401–412)
-          
-
-401 – סאטירה – שימוש בהומור, הגזמה, ציניות וחיקוי כדי לבקר תופעות חברתיות, פוליטיות ואנשים בעלי כוח.
-402 – הומור – צורת תקשורת שמטרתה להצחיק, לשחרר מתחים ולעיתים גם להעביר ביקורת בצורה מרוככת.
-403 – אירוניה – מצב שבו המשמעות האמיתית הפוכה ממה שנאמר בפועל, לעיתים כדי לרמוז ביקורת בלי להגיד אותה ישירות.
-404 – ציניות – גישה של חוסר אמון וספקנות כלפי כוונות של אחרים, המלווה בביטוי מזלזל כלפי נורמות וחברה.
-405 – סרקזם – הומור עוקצני ופוגעני, שבו משתמשים בלעג "מצחיק" כדי לבקר או לפגוע במישהו.
-406 – חיקוי – הצגת דמות מוכרת (פוליטיקאי, סלבריטאי) באמצעות דיבור, לבוש והתנהגות דומה, כדי להצחיק או לבקר אותה.
-407 – מאפייני סאטירה – שילוב בין אקטואליה (נושאים ציבוריים חמים) לבין הומור; אינה מחויבת לאובייקטיביות, איזון או זכות תגובה לנפגעים.
-408 – פוליסמיות – ריבוי משמעויות: אותו טקסט/קטע יכול להתפרש בדרכים שונות על ידי קהלים שונים; הטלוויזיה משתמשת בזה כדי לפנות לקהלים מגוונים.
-409 – תיאוריית העליונות – תאוריה בחקר ההומור: אנשים צוחקים כשהם מרגישים עליונים על מישהו אחר (למשל בדיחות על קבוצות חלשות).
-410 – תיאוריית ההרפיה – תאוריה הטוענת שהצחוק משחרר מתחים ופחדים, ומאפשר לדבר על נושאים קשים דרך הומור.
-411 – תיאוריית אי־הלימה – תאוריה שמסבירה הומור כפער מפתיע בין שני דברים שלא מתאימים (חתול מדבר, סיטואציה הפוכה מהמצופה); הפער יוצר את הצחוק.
-412 – הכחדה סימבולית – מצב שבו קבוצה או תופעה כמעט לא מיוצגת בתקשורת או מיוצגת רק בצורה שלילית, וכך נמנעת ממנה הכרה ומעמד שוויוני.
-
- זירה 5 – תרבות דיגיטלית (501–520)
-
-501 – חיברות – תהליך מתמשך שבו אדם לומד ומפנים נורמות, ערכים, אמונות ודרכי התנהגות של החברה שבה הוא חי.
-502 – הבניה חברתית – הרעיון שהמציאות אינה "אובייקטיבית לגמרי", אלא נבנית לפי איך שאנשים בחברה תופסים, מפרשים ומסכימים לראות דברים.
-503 – סוכן חיברות – גורם שמלמד אותנו "מה מקובל": משפחה, בית ספר, קבוצת השווים, תקשורת, רשתות חברתיות ועוד.
-504 – דטרמיניזם טכנולוגי – התפיסה שהטכנולוגיה לא רק כלי, אלא משנה את איך שאנחנו חושבים, מתקשרים ומתנהגים.
-505 – עידן המדורה – שלב שבו למידה ותקשורת היו בעל־פה, סביב "המדורה": סיפורים, מסורת ושיחה ישירה.
-506 – עידן הדפוס – שלב שבו מרכז הידע עבר לספרים ועיתונים; עודד השכלה, מחקר וחשיבה עצמאית.
-507 – עידן הטכנולוגיה – שלב שבו הטכנולוגיה הדיגיטלית מאפשרת גישה חופשית למידע, טשטוש גבולות בין קבוצות וירידת חשיבות ההיררכיות.
-508 – טשטוש דיגיטלי – טשטוש בין תקשורת מסורתית לרשתות חברתיות (למשל עיתונאים שפועלים גם בטלוויזיה וגם בטוויטר).
-509 – המדיום הוא המסר – הרעיון שאמצעי התקשורת עצמו (המדיום) משפיע על איך אנחנו תופסים את המציאות, לא רק התוכן שעובר דרכו.
-510 – מדיום – אמצעי תקשורת: דיבור, כתב, רדיו, טלוויזיה, אינטרנט, רשתות חברתיות – וכל אחד מהם יוצר חוויה אחרת.
-511 – השפעות שליליות – השפעות של שימוש באינטרנט: חוסר שקט, ניוון ריכוז וזיכרון, אחידות מחשבתית, חשיפה לפייק ניוז ותכנים פוגעניים.
-512 – השפעות חיוביות – השפעות חיוביות של האינטרנט: פיתוח חשיבה חזותית, חשיבה מסתעפת, חשיבה ביקורתית ויכולת לפעול בזמן אמת.
-513 – ילידים דיגיטליים – אנשים שנולדו לעולם טכנולוגי, מרגישים טבעי עם מחשבים, אינטרנט ורשתות, ויודעים להשתמש בהם מגיל צעיר.
-514 – מהגרים דיגיטליים – אנשים שנולדו לפני עידן הדיגיטל, ונאלצו להסתגל אליו בהמשך; לעיתים מתקשים ומביעים ספקנות כלפיו.
-515 – הון דיגיטלי – עד כמה יש לאדם גישה לכלים דיגיטליים וכמה הוא יודע להשתמש בהם (מחשב, אינטרנט, אפליקציות).
-516 – פער דיגיטלי – הפער בין מי שיש לו גישה וידע להשתמש בטכנולוגיה לבין מי שאין לו – פער שמשפיע על הזדמנויות בחיים.
-517 – רשתות חברתיות – פלטפורמות ליצירת קשרים, שייכות וחשיפה, המאפשרות ביטוי עצמי ומעורבות – אך גם מרדף אחרי לייקים, פגיעות ו"עקבות דיגיטליות" קבועות.
-518 – חוכמת ההמונים – מצב שבו החלטה/דעה של קבוצה גדולה (שכל אחד תורם לה קצת ידע) יכולה להיות מדויקת יותר מזו של מומחה יחיד.
-519 – דמוקרטיזציה של הידע – מצב שבו האינטרנט מאפשר לכל אחד לגשת לידע, לפרסם מידע ולהשפיע על השיח – ולא רק לגופים רשמיים.
-520 – מי קובע מה נכון – בעידן שבו כל אחד יכול לפרסם, קשה להבחין בין אמת לשקר; עדיין יש צורך בתקשורת מקצועית ואמינה שתבדוק ותסנן מידע.
-
-זירה 9 – פרסום וצריכה (901–921)
-
-901 – תרבות הצריכה – מערכת חברתית־כלכלית שמעודדת קנייה וצריכת מוצרים ושירותים כערך חשוב בחיים, ולעיתים מוגדרת כביקורת על עודף צרכנות.
-902 – קניות ברשת – רכישת מוצרים אונליין, בלחיצת כפתור, בלי לצאת מהבית, בין השאר באירועי מבצעים (בלאק פריידי וכו').
-903 – התמכרות לקניות – מצב שבו קנייה הופכת לאמצעי לפיצוי רגשי; פרסומות גורמות לאדם להרגיש "לא מספיק טוב" בלי המוצר.
-904 – פרסום – העברת מסרים בתשלום (דרך משרד פרסום/חברת מדיה) לקהל יעד, למטרת קידום מוצר, שירות, רעיון חברתי או דמות.
-905 – פרסומת – מסר שיווקי בערוץ תקשורת (טלוויזיה, רדיו, רשת, עיתון וכו') שנועד לשכנע את הצרכן לבחור במוצר/שירות מסוים.
-906 – תהליך פרסומת – חברה רוצה לקדם מוצר, פונה למשרד פרסום, נבנה קמפיין ונקנה זמן פרסום; אם הקמפיין מצליח – המכירות גדלות.
-907 – מיתוג – יצירת זהות למוצר/חברה באמצעות שם, לוגו, סלוגן, צבעים ואריזה – כדי לבדל אותו ממוצרים אחרים ולשדר תועלת/איכות.
-908 – פילוח – חלוקת השוק לקבוצות בעלות מאפיינים דומים (גיל, מגדר, תחומי עניין, מקום מגורים) כדי להתאים להן מסר ומוצר.
-909 – התניה קלאסית – קישור בין מוצר לגירוי חיובי (למשל אנשים מושכים), כך שהרגש הטוב עובר למוצר גם בלי לשים לב.
-910 – מסר שכלי – פרסומת שמתמקדת במידע: נתונים, מחיר, יתרונות טכניים – פונה לשיקול דעת רציונלי.
-911 – מסר רגשי – פרסומת שפונה לרגש ולא לשכל, יוצרת אווירה, תדמית וסיפור, וקושרת את המוצר לתחושה או צורך רגשי.
-912 – פרסום מסחרי – קמפיין שמטרתו למכור מוצר/שירות ולהגדיל רווחים של גוף עסקי.
-913 – פרסום חברתי – קמפיין ללא מטרת רווח כספי, שמטרתו להעלות מודעות או לחנך בנושא חברתי (אלימות, תרומות, בריאות וכו').
-914 – אקטיביזם חברתי – פעילות לשינוי חברתי/פוליטי: מחאות, קמפיינים, רשתות חברתיות וכלים ציבוריים נוספים.
-915 – אקטיביסט כורסא – אדם שתומך במאבק בעיקר דרך הרשת (לייקים, שיתופים), בלי לצאת לפעולה בשטח.
-916 – פרסום סמוי – שילוב מוצר/מותג בתוך תוכן (סדרה, סרט, כתבה) בלי לסמן זאת כפרסומת; יעיל אך עלול לפגוע באמון הצופים.
-917 – תוכן ממומן – כתבה/תוכן שיווקי בתשלום, שמופיע כמו כתבה רגילה אבל נכתב/נערך לפי אינטרס של גוף מממן.
-918 – פרסום ממוקד – פרסום דיגיטלי שמתבסס על מידע על הגולש (חיפושים, מיקום, תחומי עניין) כדי להציג לו פרסומות מותאמות.
-919 – רייטינג – מדד לכמה אנשים צפו בתוכנית; ככל שהרייטינג גבוה, כך הערוץ יכול לגבות יותר כסף על זמן פרסום.
-920 – אתיקה בפרסום – כללים שמטרתם להגן על הציבור: לא להטעות, לא לעודד עבירה על החוק, לא לפגוע בקטינים, לא להשתמש באלימות קיצונית או ניצול פחד.
-921 – ייצוג מגדרי – איך נשים וגברים מוצגים בפרסום; ייצוג סטריאוטיפי יכול לחזק תפיסות בעייתיות על מגדר ותפקידים חברתיים.
-
-
-
-קח את הקודים האלה וכל פעם שאני שולח/ת 
-קוד - תיאור 
-אתה יודע שאתה צריך להתסכל על השם של הקוד ולהשוות אם התיאור נכון
-תהיה קשוח אבל לא יותר מידי 
-יש לך 3 אופציות
-
-נכון - 5 נקודות +
-נכון חלקית - 3 נקודות + (תסביר גם למה חלקית)
-טעות - -10 נקודות (תסביר למה טעות)
-
-תתעלם מהנקודות רק תכתוב אותם כל פעם       
-
-          תקרא לצאט הזה בשם
-          "משחק ניו מדיה"
-          תבדוק אם יש עוד צאטים כאלה שכבר דיברנו עליהם אם כן תמספר את השם לפי כמה דפים כבר יש 
-          אם אין תשאיר בלי מספר
-        </pre>
-      </div>
-
-      <div id="credits-box" class="hidden">
-        <h3>קרדיטים ©️</h3>
-        <p>המשחק נבנה ועוצב על־ידי <b>תומר מודן</b>.</p>
-        <p>המשחק יוצר ונכתב בסיוע <b>ChatGPT</b>.</p>
-        <p>מצאת טעות או בעיה בהגדרה? תכתוב לתומר והוא יעדכן את המשחק.</p>
-      </div>
-    </div>
-
-    <!-- מסך משחק -->
-    <div id="game-screen" class="hidden">
-
-      <div id="game-header">
-        <div>
-          <div id="timer">⏱️ 05:00</div>
-        </div>
-        <div>
-          <div id="score">⭐ ניקוד: 0</div>
-          <div id="target-score-label" class="tag">מטרה: 50 נקודות</div>
-        </div>
-      </div>
-
-      <div id="zone-filter-bar">
-        <div class="section-title" style="margin-top:0;">זירות למשחק:</div>
-        <div>
-          <label><input type="checkbox" class="zone-filter" value="1" checked> זירה 1</label>
-          <label><input type="checkbox" class="zone-filter" value="3" checked> זירה 3</label>
-          <label><input type="checkbox" class="zone-filter" value="4" checked> זירה 4</label>
-          <label><input type="checkbox" class="zone-filter" value="5" checked> זירה 5</label>
-          <label><input type="checkbox" class="zone-filter" value="9"> זירה 9 </label>
-        </div>
-        <div style="margin-top:10px;">
-          <button id="btn-zones-all" class="btn secondary small-btn">כל הזירות</button>
-          <button id="btn-zones-clear" class="btn secondary small-btn">אפס בחירה</button>
-        </div>
-      </div>
-
-      <div id="wheel-section">
-        <div id="wheel-container">
-          <div id="pointer"></div>
-          <div id="wheel">
-            <div id="wheel-labels">
-              <span id="label-zone-1">זירה 1</span>
-              <span id="label-zone-3">זירה 3</span>
-              <span id="label-zone-4">זירה 4</span>
-              <span id="label-zone-5">זירה 5</span>
+    <div class="content">
+      <!-- צד שמאל - גלגל, זירה, סטטוס -->
+      <section class="section">
+        <div class="top-bar">
+          <div class="top-left">
+            <a href="index.html" class="back-link">
+              <button class="btn ghost small" type="button">⬅ מסך הבית</button>
+            </a>
+            <div class="pill">
+              מצב לימוד  
+              <span id="modeLabel">קודים לזכירה</span>
             </div>
           </div>
+          <span class="badge">זירות 1,2,3,4,5,9</span>
         </div>
-        <div>
-          <button id="btn-spin" class="btn">🎯 סובב גלגל</button>
-          <div id="wheel-message">
-            סובב את הגלגל כדי לבחור זירה. אחרי העצירה יופיעו 3 מושגים מהזירה הזו והטיימר יתחיל לבד.
+
+        <div class="row" style="margin-top: 10px;">
+          <label for="zoneSelect" style="font-size: 0.85rem; color: #d1d5db;">בחירת זירה למשחק</label>
+          <select id="zoneSelect">
+            <option value="all">כל הזירות יחד</option>
+            <option value="1">זירה 1 - יסודות תקשורת</option>
+            <option value="2">זירה 2 - גלובליזציה</option>
+            <option value="3">זירה 3 - הצגת המציאות</option>
+            <option value="4">זירה 4 - הומור וסאטירה</option>
+            <option value="5">זירה 5 - תרבות דיגיטלית</option>
+            <option value="9">זירה 9 - פרסום וצרכנות</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <button class="btn" type="button" id="spinButton">
+            🎯 סיבוב גלגל והגרלת קוד
+          </button>
+          <button class="btn secondary" type="button" id="skipButton">
+            דלג על מושג
+          </button>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">קוד נוכחי</div>
+            <div class="stat-value" id="currentCodeLabel">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">זירה נוכחית</div>
+            <div class="stat-value" id="currentZoneLabel">-</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">שאלות שנענו</div>
+            <div class="stat-value" id="questionsCount">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">MASTERED</div>
+            <div class="stat-value" id="masteredCount">0</div>
           </div>
         </div>
-      </div>
 
-      <div id="question-box">
-        <div id="question-number">עדיין אין שאלה – סובב את הגלגל</div>
-        <div id="question-code"></div>
-        <div id="zone-label">זירה: -</div>
-        <div id="concept-name">המתן לבחירת הזירה</div>
-        <div class="note">
-          את התשובה כותבים בצ׳אט איתי 😉  
-          תכתוב גם את <b>קוד השאלה</b> שמופיע כאן באתר.
+        <div class="concept-display" id="conceptBox">
+          <div class="concept-code" id="conceptCode">לחץ על "סיבוב גלגל"</div>
+          <div class="concept-meta" id="conceptMeta">
+            המערכת תגריל קוד מתוך הזירה שנבחרה ותציג כאן.
+          </div>
         </div>
-      </div>
 
-      <div class="section-title">ניקוד לשאלה הזאת:</div>
-      <div class="score-controls">
-        <button id="btn-correct" class="btn score-btn" disabled>✅ נכון (+5)</button>
-        <button id="btn-partial" class="btn secondary score-btn" disabled>⚖️ חלקי (+3)</button>
-        <button id="btn-wrong" class="btn danger score-btn" disabled>❌ טעות (-10 + הסבר)</button>
-        <button id="btn-timeover" class="btn danger score-btn" disabled>⏰ נגמר הזמן (-20 + הסבר)</button>
-      </div>
+        <div class="small-label">אפשרות סימון מהיר אחרי שבדקת בצאט</div>
+        <div class="chip-row">
+          <button class="chip" type="button" data-result="correct" id="markCorrect">
+            ✅ נכון לגמרי
+          </button>
+          <button class="chip" type="button" data-result="partial" id="markPartial">
+            ⚠ נכון חלקית
+          </button>
+          <button class="chip" type="button" data-result="wrong" id="markWrong">
+            ❌ טעות
+          </button>
+        </div>
 
-      <div class="section-title">ניווט:</div>
-      <div class="nav-controls">
-        <button id="btn-reset-score" class="btn secondary">🔄 איפוס ניקוד</button>
-        <button id="btn-back-home-from-game" class="btn secondary">🏠 חזרה למסך הבית</button>
-      </div>
+        <p class="note">
+          הכפתורים האלה רק מעדכנים נקודות וסטטוס MASTERED.  
+          את הניסוח עצמו אתה בודק בצאט לפי הפורמט למטה.
+        </p>
+      </section>
 
-      <div id="game-result"></div>
+      <!-- צד ימין - תשובה, משוב, צאט פורמט -->
+      <section class="section">
+        <h2 class="section-title">
+          ניסוח המושג במילים שלך
+          <span class="badge">מתאים לצאט</span>
+        </h2>
+
+        <div class="small-label">כתוב כאן את התיאור שלך למושג</div>
+        <textarea
+          id="answerInput"
+          placeholder="לדוגמה: תהליך שבו אדם לומד ומפנים את הנורמות, הערכים וההתנהגות של החברה שבה הוא חי..."
+        ></textarea>
+
+        <div class="row" style="margin-top: 8px;">
+          <button class="btn" type="button" id="submitAnswer">
+            שמור ניסוח למושג הזה
+          </button>
+          <button class="btn secondary" type="button" id="clearAnswer">
+            נקה שדה תשובה
+          </button>
+        </div>
+
+        <div class="feedback" id="feedbackBox"></div>
+
+        <div class="shortcut-row">
+          כדי לבדוק מול הצאט השתמש בפורמט
+          <code>קוד - תיאור</code>
+          לדוגמה:
+        </div>
+
+        <div class="prompt-box">
+          <div>המערכת כבר מכירה את הקודים שלך. אתה שולח רק את השורה הזאת:</div>
+          <code id="chatPromptExample">
+107 - מה שהמוען מנסה להעביר לנמען
+          </code>
+          <div style="margin-top: 4px;">
+            הצאט מחזיר אחד משלושה:
+            נכון - 5 נקודות +  
+            נכון חלקית - 3 נקודות + עם הסבר  
+            טעות - -10 נקודות עם הסבר  
+            אחרי התשובה של הצאט אתה מסמן כאן בצד ימין באחד הכפתורים.
+          </div>
+        </div>
+
+        <div class="small-label" style="margin-top: 10px;">ניהול נקודות וסטטוס משחק</div>
+        <div class="row">
+          <button class="btn ghost small" type="button" id="resetCurrent">
+            איפוס מושג נוכחי
+          </button>
+          <button class="btn ghost small" type="button" id="resetAll">
+            איפוס כל הנתונים במכשיר
+          </button>
+        </div>
+
+        <p class="note">
+          כל הנקודות, מספר השאלות ונתוני MASTERED נשמרים מקומית ב localStorage במכשיר ובדפדפן הנוכחי בלבד.
+        </p>
+      </section>
     </div>
-
-    <!-- מסך מצב לימוד -->
-    <div id="study-screen" class="hidden">
-      <h2>מצב לימוד – כל המושגים</h2>
-      <div class="subtitle">
-        רואה מושג + הגדרה מלאה • לוחץ "הבנתי" למושג הבא  
-        אפשר לסנן לפי זירה / רק מושגים שטעית בהם / חיפוש לפי שם.
-      </div>
-
-      <div class="study-filters">
-        <div class="filter-row">
-          <label for="study-source-filter">מקור:</label>
-          <select id="study-source-filter">
-            <option value="all">כל המושגים</option>
-            <option value="mistakes">מושגים שטעיתי בהם</option>
-          </select>
-        </div>
-        <div class="filter-row">
-          <label for="study-zone-filter">זירה:</label>
-          <select id="study-zone-filter">
-            <option value="all">כל הזירות</option>
-            <option value="1">זירה 1</option>
-            <option value="3">זירה 3</option>
-            <option value="4">זירה 4</option>
-            <option value="5">זירה 5</option>
-            <option value="9">זירה 9</option>
-          </select>
-        </div>
-        <div class="filter-row">
-          <label for="study-search">חיפוש:</label>
-          <input id="study-search" type="text" placeholder="הקלד שם מושג." />
-        </div>
-        <div id="study-filters-actions">
-          <button id="btn-apply-study-filter" class="btn secondary small-btn">החל סינון</button>
-        </div>
-      </div>
-
-      <div id="study-box">
-        <div id="study-counter">מושג 1 מתוך ?</div>
-        <div id="study-concept-name">—</div>
-        <div id="study-definition">—</div>
-      </div>
-
-      <div class="nav-controls">
-        <button id="btn-study-next" class="btn">✅ הבנתי – הבא</button>
-        <button id="btn-study-random" class="btn secondary">🎲 מושג אקראי</button>
-        <button id="btn-back-home-from-study" class="btn secondary">🏠 חזרה למסך הבית</button>
-      </div>
-    </div>
-
-    <!-- פופאפ הסבר -->
-    <div id="popup-overlay">
-      <div class="popup-card">
-        <div class="popup-title" id="popup-concept-name">מושג</div>
-        <div class="popup-definition" id="popup-definition"></div>
-        <div class="popup-buttons">
-          <button id="btn-popup-ok" class="btn">הבנתי</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- פופאפ זכייה -->
-    <div id="win-overlay">
-      <div class="popup-card">
-        <div class="popup-title">כל הכבוד! 🎉</div>
-        <div class="popup-definition">
-          הגעת ליעד הניקוד שהוגדר לפי כמות המושגים.<br>
-          אפשר להמשיך לשחק עם אותו ניקוד, או לאפס ולהתחיל מחדש.
-        </div>
-        <div class="popup-buttons">
-          <button id="btn-win-continue" class="btn secondary">להמשיך</button>
-          <button id="btn-win-reset" class="btn">איפוס ניקוד</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="layout-toggle-bar">
-      <button id="btn-toggle-layout" class="btn secondary small-btn">🖥️ / 📱 החלף מצב תצוגה</button>
-    </div>
-
   </div>
 
+  <!-- קבצי הנתונים והמשחק -->
   <script src="data.js"></script>
-
-  <!-- סקריפט בחירת תצוגה + "איך המשחק עובד" + קרדיטים -->
-  <script>
-    window.addEventListener("DOMContentLoaded", function () {
-      const overlay = document.getElementById("layout-chooser");
-      const app = document.querySelector(".app");
-      const btnDesktop = document.getElementById("btn-layout-desktop");
-      const btnMobile = document.getElementById("btn-layout-mobile");
-      const btnToggle = document.getElementById("btn-toggle-layout");
-
-      const howBtn = document.getElementById("btn-how-it-works");
-      const howBox = document.getElementById("how-it-works-box");
-      const creditsBtn = document.getElementById("btn-credits");
-      const creditsBox = document.getElementById("credits-box");
-
-      function applyLayout(mode) {
-        app.classList.remove("force-desktop", "force-mobile");
-        if (mode === "desktop") app.classList.add("force-desktop");
-        if (mode === "mobile") app.classList.add("force-mobile");
-        localStorage.setItem("nm_layout_mode", mode);
-      }
-
-      let saved = localStorage.getItem("nm_layout_mode");
-      if (saved === "desktop" || saved === "mobile") {
-        applyLayout(saved);
-        overlay.style.display = "none";
-      }
-
-      btnDesktop.addEventListener("click", () => {
-        applyLayout("desktop");
-        overlay.style.display = "none";
-      });
-
-      btnMobile.addEventListener("click", () => {
-        applyLayout("mobile");
-        overlay.style.display = "none";
-      });
-
-      btnToggle.addEventListener("click", () => {
-        const isDesktop = app.classList.contains("force-desktop");
-        applyLayout(isDesktop ? "mobile" : "desktop");
-      });
-
-      function hideAllInfoBoxes() {
-        if (howBox) howBox.classList.add("hidden");
-        if (creditsBox) creditsBox.classList.add("hidden");
-      }
-
-      if (howBtn && howBox) {
-        howBtn.addEventListener("click", () => {
-          const willShow = howBox.classList.contains("hidden");
-          hideAllInfoBoxes();
-          if (willShow) howBox.classList.remove("hidden");
-        });
-      }
-
-      if (creditsBtn && creditsBox) {
-        creditsBtn.addEventListener("click", () => {
-          const willShow = creditsBox.classList.contains("hidden");
-          hideAllInfoBoxes();
-          if (willShow) creditsBox.classList.remove("hidden");
-        });
-      }
-    });
-  </script>
-
   <script src="game.js"></script>
 </body>
 </html>
-
-</body>
-</html>
-
-
-
-
-
-
